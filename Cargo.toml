@@ -1,0 +1,41 @@
+# Copyright 2018 Koutheir Attouchi.
+# See the "LICENSE.txt" file at the top-level directory of this distribution.
+#
+# Licensed under the the MIT license. This file may not be copied, modified,
+# or distributed except according to those terms.
+
+[package]
+name = "binary-security-check"
+version = "1.0.0"
+authors = [
+    "Koutheir Attouchi <koutheir@gmail.com>"
+    ]
+license = "MIT"
+description = "Analyzer of security features in executable binaries"
+
+# The release profile, used for `cargo build --release`.
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'unwind'
+incremental = false
+overflow-checks = true
+
+[dependencies]
+docopt       = { version = "1.0" }
+failure      = { version = "0.1" }
+goblin       = { version = "0.0" }
+lazy_static  = { version = "1.0" }
+log          = { version = "0.4" }
+memmap       = { version = "0.6" }
+rayon        = { version = "1.0" }
+regex        = { version = "1.0" }
+scroll       = { version = "0.9" }
+serde        = { version = "1.0" }
+serde_derive = { version = "1.0" }
+simplelog    = { version = "0.5" }
+termcolor    = { version = "0.3" }
