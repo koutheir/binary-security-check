@@ -40,14 +40,13 @@ use parser::*;
 use ui::*;
 
 use rayon::prelude::*;
-use std::io;
 use std::io::Write;
 use std::iter;
 use std::path::{Path, PathBuf};
 
 fn main() {
     lazy_static::initialize(&ARGS);
-    let _ = init_logging().or_else(|ref r| writeln!(io::stderr(), "Error: {}", format_error(r)));
+    let _ = init_logging().or_else(|ref r| eprintln!("Error: {}", format_error(r)));
 
     let mut exit_code = 0;
     match run() {
