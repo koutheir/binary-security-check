@@ -46,7 +46,10 @@ use std::path::{Path, PathBuf};
 
 fn main() {
     lazy_static::initialize(&ARGS);
-    let _ = init_logging().or_else(|ref r| eprintln!("Error: {}", format_error(r)));
+    let _ = init_logging().or_else(|ref r| -> Result<()> {
+        eprintln!("Error: {}", format_error(r));
+        Ok(())
+    });
 
     let mut exit_code = 0;
     match run() {
@@ -109,7 +112,7 @@ fn run<'args>() -> Result<(SuccessResults<'args>, ErrorResults<'args>)> {
 fn format_error(r: &Error) -> String {
     // Format the error as a message.
     let mut text = format!("{}.", r);
-    for cause in r.causes().skip(1) {
+    for cause in Fail::iter_causes(r) {
         text += &format!(" {}.", cause);
     }
     text
