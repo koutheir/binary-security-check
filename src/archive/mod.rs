@@ -4,11 +4,11 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use elf;
-use errors::*;
-use options::status::*;
-use options::*;
-use parser::*;
+use crate::elf;
+use crate::errors::*;
+use crate::options::status::*;
+use crate::options::*;
+use crate::parser::*;
 
 use goblin;
 

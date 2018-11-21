@@ -4,8 +4,8 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use elf::needed_libc::NeededLibC;
-use errors::*;
+use crate::elf::needed_libc::NeededLibC;
+use crate::errors::*;
 
 use std::collections::HashSet;
 use std::mem::ManuallyDrop;

@@ -4,8 +4,8 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use cmdline::*;
-use errors::*;
+use crate::cmdline::*;
+use crate::errors::*;
 
 use std::sync::Arc;
 use termcolor;

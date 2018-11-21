@@ -4,8 +4,8 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use create_an_alias_to_a_reference;
-use errors::*;
+use crate::create_an_alias_to_a_reference;
+use crate::errors::*;
 
 use goblin;
 use memmap::{Mmap, MmapOptions};

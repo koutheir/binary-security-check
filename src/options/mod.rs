@@ -7,14 +7,14 @@
 pub mod status;
 
 use self::status::*;
-use archive;
-use cmdline;
-use create_an_alias_to_a_reference;
-use elf;
-use elf::needed_libc::NeededLibC;
-use errors::*;
-use parser::*;
-use pe;
+use crate::archive;
+use crate::cmdline;
+use crate::create_an_alias_to_a_reference;
+use crate::elf;
+use crate::elf::needed_libc::NeededLibC;
+use crate::errors::*;
+use crate::parser::*;
+use crate::pe;
 
 use goblin;
 

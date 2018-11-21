@@ -9,11 +9,11 @@ pub mod needed_libc;
 
 use self::checked_functions::function_is_checked_version;
 use self::needed_libc::NeededLibC;
-use cmdline::*;
-use errors::*;
-use options::status::*;
-use options::*;
-use parser::*;
+use crate::cmdline::*;
+use crate::errors::*;
+use crate::options::status::*;
+use crate::options::*;
+use crate::parser::*;
 
 use goblin;
 use log;

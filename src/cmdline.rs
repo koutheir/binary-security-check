@@ -4,7 +4,7 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use elf;
+use crate::elf;
 
 use docopt::Docopt;
 use std::fmt;

@@ -34,10 +34,10 @@ mod parser;
 mod pe;
 mod ui;
 
-use cmdline::*;
-use errors::*;
-use parser::*;
-use ui::*;
+use crate::cmdline::*;
+use crate::errors::*;
+use crate::parser::*;
+use crate::ui::*;
 
 use rayon::prelude::*;
 use std::io::Write;

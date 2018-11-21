@@ -5,10 +5,10 @@
 // or distributed except according to those terms.
 
 use super::checked_functions::*;
-use cmdline::*;
-use elf;
-use errors::*;
-use parser::*;
+use crate::cmdline::*;
+use crate::elf;
+use crate::errors::*;
+use crate::parser::*;
 
 use goblin;
 use log;
