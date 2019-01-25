@@ -49,7 +49,7 @@ impl NeededLibC {
         Self {
             checked_functions: HashSet::from_iter(
                 functions_with_checked_versions
-                    .into_iter()
+                    .iter()
                     .map(|name| CheckedFunction::from_unchecked_name(name)),
             ),
         }
