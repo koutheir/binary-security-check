@@ -89,7 +89,7 @@ pub fn supports_aslr(elf: &goblin::elf::Elf) -> ASLRCompatibilityLevel {
                     debug!("Found type 'PT_PHDR' inside program headers section.");
                 } else if let Some(ref dynamic_section) = elf.dynamic {
                     let dynamic_section_flags_include_pie = dynamic_section.dyns.iter().any(|e| {
-                        (e.d_tag == goblin::elf::dyn::DT_FLAGS_1) && ((e.d_val & DF_1_PIE) != 0)
+                        (e.d_tag == goblin::elf::r#dyn::DT_FLAGS_1) && ((e.d_val & DF_1_PIE) != 0)
                     });
 
                     if dynamic_section_flags_include_pie {
@@ -257,33 +257,33 @@ pub fn requires_immediate_binding(elf: &goblin::elf::Elf) -> bool {
     elf.dynamic
         // We want to reference the data in `elf.dynamic`, not move it.
         .as_ref()
-        .and_then(|dyn| {
+        .and_then(|dli| {
             // We have dynamic linking information.
             // Find the first entry that requires immediate binding.
-            dyn.dyns.iter().find(|dyn_entry| dynamic_linking_info_entry_requires_immediate_binding(dyn_entry))
+            dli.dyns.iter().find(|dyn_entry| dynamic_linking_info_entry_requires_immediate_binding(dyn_entry))
         })
         .is_some()
 }
 
 fn dynamic_linking_info_entry_requires_immediate_binding(
-    dyn_entry: &goblin::elf::dyn::Dyn,
+    dyn_entry: &goblin::elf::r#dyn::Dyn,
 ) -> bool {
     match dyn_entry.d_tag {
-        goblin::elf::dyn::DT_BIND_NOW => {
+        goblin::elf::r#dyn::DT_BIND_NOW => {
             debug!("Found tag 'DT_BIND_NOW' inside dynamic linking information.");
             true
         }
 
-        goblin::elf::dyn::DT_FLAGS => {
-            let r = (dyn_entry.d_val & goblin::elf::dyn::DF_BIND_NOW) != 0;
+        goblin::elf::r#dyn::DT_FLAGS => {
+            let r = (dyn_entry.d_val & goblin::elf::r#dyn::DF_BIND_NOW) != 0;
             if r {
                 debug!("Bit 'DF_BIND_NOW' is set in tag 'DT_FLAGS' inside dynamic linking information.");
             }
             r
         }
 
-        goblin::elf::dyn::DT_FLAGS_1 => {
-            let r = (dyn_entry.d_val & goblin::elf::dyn::DF_1_NOW) != 0;
+        goblin::elf::r#dyn::DT_FLAGS_1 => {
+            let r = (dyn_entry.d_val & goblin::elf::r#dyn::DF_1_NOW) != 0;
             if r {
                 debug!(
                     "Bit 'DF_1_NOW' is set in tag 'DT_FLAGS_1' inside dynamic linking information."
