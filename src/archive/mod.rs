@@ -45,7 +45,8 @@ fn member_has_stack_protection(member_name: &str, bytes: &[u8]) -> Result<bool> 
         debug!("Format of archive member '{}' is 'ELF'.", member_name);
         // `r` is `true` if any named function or an unspecified-type symbol is
         // named '__stack_chk_fail_local' or '__stack_chk_fail'.
-        let r = elf.syms
+        let r = elf
+            .syms
             .iter()
             .filter_map(|ref symbol| elf::symbol_is_named_function_or_unspecified(&elf, symbol))
             .any(|name| name == "__stack_chk_fail" || name == "__stack_chk_fail_local");

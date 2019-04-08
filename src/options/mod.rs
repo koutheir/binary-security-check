@@ -79,7 +79,8 @@ impl<'t> BinarySecurityOption<'t> for DataExecutionPreventionOption {
                 mask_name: "IMAGE_DLLCHARACTERISTICS_NX_COMPAT",
                 mask: pe::IMAGE_DLLCHARACTERISTICS_NX_COMPAT,
                 present: true,
-            }.check(parser)
+            }
+            .check(parser)
         } else {
             Ok(Box::new(YesNoUnknownStatus::unknown("DATA-EXEC-PREVENT")))
         }
@@ -101,7 +102,8 @@ impl<'t> BinarySecurityOption<'t> for PERunsOnlyInAppContainerOption {
             mask_name: "IMAGE_DLLCHARACTERISTICS_APPCONTAINER",
             mask: pe::IMAGE_DLLCHARACTERISTICS_APPCONTAINER,
             present: true,
-        }.check(parser)
+        }
+        .check(parser)
     }
 }
 
@@ -118,7 +120,8 @@ impl<'t> BinarySecurityOption<'t> for RequiresIntegrityCheckOption {
                 mask_name: "IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY",
                 mask: pe::IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY,
                 present: true,
-            }.check(parser)
+            }
+            .check(parser)
         } else {
             Ok(Box::new(YesNoUnknownStatus::unknown("VERIFY-DIGITAL-CERT")))
         }
@@ -143,7 +146,8 @@ impl<'t> BinarySecurityOption<'t> for PEEnableManifestHandlingOption {
             mask_name: "IMAGE_DLLCHARACTERISTICS_NO_ISOLATION",
             mask: pe::IMAGE_DLLCHARACTERISTICS_NO_ISOLATION,
             present: false,
-        }.check(parser)
+        }
+        .check(parser)
     }
 }
 

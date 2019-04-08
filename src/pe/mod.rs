@@ -206,7 +206,8 @@ pub fn supports_control_flow_guard(pe: &goblin::pe::PE) -> PEControlFlowGuardLev
             debug!("Bit 'IMAGE_DLLCHARACTERISTICS_GUARD_CF' is set in 'DllCharacteristics' inside optional Windows header.");
 
             if (optional_header.windows_fields.dll_characteristics
-                & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE) != 0
+                & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
+                != 0
             {
                 debug!("Bit 'IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE' is set in 'DllCharacteristics' inside optional Windows header.");
                 PEControlFlowGuardLevel::Supported
@@ -245,13 +246,15 @@ pub fn supports_aslr(pe: &goblin::pe::PE) -> ASLRCompatibilityLevel {
         ASLRCompatibilityLevel::Unsupported
     } else if let Some(optional_header) = pe.header.optional_header {
         if (optional_header.windows_fields.dll_characteristics
-            & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE) != 0
+            & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
+            != 0
         {
             let handles_addresses_larger_than_2_gigabytes =
                 (pe.header.coff_header.characteristics & IMAGE_FILE_LARGE_ADDRESS_AWARE) != 0;
 
             if (optional_header.windows_fields.dll_characteristics
-                & IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA) != 0
+                & IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA)
+                != 0
             {
                 debug!("Bit 'IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA' is set in 'DllCharacteristics' inside optional Windows header.");
 
@@ -424,7 +427,8 @@ fn image_load_configuration_directory_has_safe_seh_handlers(
                     // To unify the comparison below, convert the count into the same type as in
                     // the PE32+ executable.
                     .map(ImageLoadConfigDirectory64_SEHandlerCount_Type::from)
-            }.ok()
+            }
+            .ok()
         })
         // Return `Some(true)` if the load configuration table references a least one safe
         // structured exception handler.

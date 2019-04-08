@@ -40,7 +40,8 @@ pub fn get_libc_functions_by_protection<'t>(
     elf: &goblin::elf::Elf,
     libc_ref: &'t NeededLibC,
 ) -> (HashSet<&'t str>, HashSet<&'t str>) {
-    let imported_functions = elf.dynsyms
+    let imported_functions = elf
+        .dynsyms
         .iter()
         .filter_map(|symbol| dynamic_symbol_is_named_imported_function(elf, &symbol));
 
@@ -81,7 +82,8 @@ pub fn supports_aslr(elf: &goblin::elf::Elf) -> ASLRCompatibilityLevel {
 
         goblin::elf::header::ET_DYN => {
             if log_enabled!(log::Level::Debug) {
-                if elf.program_headers
+                if elf
+                    .program_headers
                     .iter()
                     .any(|ph| ph.p_type == goblin::elf::program_header::PT_PHDR)
                 {
@@ -117,7 +119,8 @@ pub fn supports_aslr(elf: &goblin::elf::Elf) -> ASLRCompatibilityLevel {
 
 /// [PT_GNU_RELRO](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/progheader.html).
 pub fn becomes_read_only_after_relocations(elf: &goblin::elf::Elf) -> bool {
-    let r = elf.program_headers
+    let r = elf
+        .program_headers
         .iter()
         .any(|ph| ph.p_type == goblin::elf::program_header::PT_GNU_RELRO);
 
@@ -129,7 +132,8 @@ pub fn becomes_read_only_after_relocations(elf: &goblin::elf::Elf) -> bool {
 
 /// [`__stack_chk_fail`](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/baselib---stack-chk-fail-1.html).
 pub fn has_stack_protection(elf: &goblin::elf::Elf) -> bool {
-    let r = elf.dynsyms
+    let r = elf
+        .dynsyms
         .iter()
         // Consider only named functions, and focus on their names.
         .filter_map(|ref symbol| dynamic_symbol_is_named_function(elf, symbol))
@@ -168,7 +172,8 @@ pub fn dynamic_symbol_is_named_exported_function<'t>(
                 || st_bind == goblin::elf::sym::STB_GNU_UNIQUE)
                 && (symbol.st_value != 0)
             {
-                return elf.dynstrtab
+                return elf
+                    .dynstrtab
                     .get(symbol.st_name)
                     // If we get a symbol for the requested name, then continue only if the
                     // symbol name is valid UTF-8.
@@ -237,9 +242,11 @@ fn dynamic_symbol_is_named_imported_function<'t>(
         let st_bind = symbol.st_bind();
         if (st_bind == goblin::elf::sym::STB_GLOBAL
             || st_bind == goblin::elf::sym::STB_WEAK
-            || st_bind == goblin::elf::sym::STB_GNU_UNIQUE) && (symbol.st_value == 0)
+            || st_bind == goblin::elf::sym::STB_GNU_UNIQUE)
+            && (symbol.st_value == 0)
         {
-            return elf.dynstrtab
+            return elf
+                .dynstrtab
                 .get(symbol.st_name)
                 // If we get a symbol for the requested name, then continue only if the
                 // symbol name is valid UTF-8.
@@ -260,7 +267,9 @@ pub fn requires_immediate_binding(elf: &goblin::elf::Elf) -> bool {
         .and_then(|dli| {
             // We have dynamic linking information.
             // Find the first entry that requires immediate binding.
-            dli.dyns.iter().find(|dyn_entry| dynamic_linking_info_entry_requires_immediate_binding(dyn_entry))
+            dli.dyns
+                .iter()
+                .find(|dyn_entry| dynamic_linking_info_entry_requires_immediate_binding(dyn_entry))
         })
         .is_some()
 }

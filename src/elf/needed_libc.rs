@@ -76,7 +76,12 @@ impl NeededLibC {
         KNOWN_LIBC_FILE_LOCATIONS
             .iter()
             // For each known libc file location, parse the libc file.
-            .map(|known_location| Self::open_elf_for_architecture(&Self::get_libc_path(known_location, &file_name), elf))
+            .map(|known_location| {
+                Self::open_elf_for_architecture(
+                    &Self::get_libc_path(known_location, &file_name),
+                    elf,
+                )
+            })
             // Return the first that can be successfully parsed.
             .find(Result::is_ok)
             // Or return an error in case nothing is found or nothing can be parsed.
@@ -127,7 +132,8 @@ impl NeededLibC {
     }
 
     fn get_checked_functions_elf(elf: &goblin::elf::Elf) -> HashSet<CheckedFunction> {
-        let checked_functions = elf.dynsyms
+        let checked_functions = elf
+            .dynsyms
             .iter()
             // Consider only named exported functions, and focus on their name.
             .filter_map(|symbol| elf::dynamic_symbol_is_named_exported_function(elf, &symbol))

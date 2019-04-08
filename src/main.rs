@@ -87,7 +87,8 @@ type ErrorResults<'args> = Vec<(&'args PathBuf, Error)>;
 fn run<'args>() -> Result<(SuccessResults<'args>, ErrorResults<'args>)> {
     let icb_stdout = ColorBuffer::for_stdout();
 
-    let result: (Vec<_>, Vec<_>) = ARGS.arg_file
+    let result: (Vec<_>, Vec<_>) = ARGS
+        .arg_file
         .iter()
         // Zip one color buffer with each file to process.
         .zip(iter::repeat(icb_stdout))
