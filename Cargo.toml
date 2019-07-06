@@ -33,10 +33,10 @@ goblin       = { version = "0.0" }
 lazy_static  = { version = "1.3" }
 log          = { version = "0.4" }
 memmap       = { version = "0.7" }
-rayon        = { version = "1.0" }
+rayon        = { version = "1.1" }
 regex        = { version = "1.1" }
 scroll       = { version = "0.9" }
 serde        = { version = "1.0" }
 serde_derive = { version = "1.0" }
-simplelog    = { version = "0.5" }
+simplelog    = { version = "0.6" }
 termcolor    = { version = "1.0" }

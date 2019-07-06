@@ -132,9 +132,11 @@ fn init_logging() -> Result<()> {
         UseColor::never => simplelog::SimpleLogger::init(log_level, log_config)
             .context(ErrorKind::LogInitialization)?,
 
-        UseColor::auto | UseColor::always => simplelog::TermLogger::init(log_level, log_config)
-            .or_else(|_e| simplelog::SimpleLogger::init(log_level, log_config))
-            .context(ErrorKind::LogInitialization)?,
+        UseColor::auto | UseColor::always => {
+            simplelog::TermLogger::init(log_level, log_config, simplelog::TerminalMode::Stderr)
+                .or_else(|_e| simplelog::SimpleLogger::init(log_level, log_config))
+                .context(ErrorKind::LogInitialization)?
+        }
     }
 
     debug!("{:?}", *ARGS);
