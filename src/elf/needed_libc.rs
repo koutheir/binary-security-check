@@ -179,7 +179,7 @@ impl NeededLibC {
     }
 }
 
-static KNOWN_LIBC_FILE_LOCATIONS: &'static [&'static str] = &[
+static KNOWN_LIBC_FILE_LOCATIONS: &[&str] = &[
     "/lib",
     "/usr/lib",
     "/lib64",

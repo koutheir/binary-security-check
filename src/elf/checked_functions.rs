@@ -39,7 +39,7 @@ pub fn function_is_checked_version(name: &str) -> bool {
 /// - [LSB 4.0.0](http://refspecs.linux-foundation.org/LSB_4.0.0/LSB-Core-generic/LSB-Core-generic/libc.html).
 /// - [LSB 4.1.0](http://refspecs.linux-foundation.org/LSB_4.1.0/LSB-Core-generic/LSB-Core-generic/libc.html).
 /// - [LSB 5.0.0](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/libc.html).
-pub static LSB_4_0_0_FUNCTIONS_WITH_CHECKED_VERSIONS: &'static [&'static str] = &[
+pub static LSB_4_0_0_FUNCTIONS_WITH_CHECKED_VERSIONS: &[&str] = &[
     "confstr",
     "fgets",
     "fgets_unlocked",

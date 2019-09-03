@@ -21,7 +21,7 @@ pub const COLOR_BAD: termcolor::Color = termcolor::Color::Red;
 pub const COLOR_UNKNOWN: termcolor::Color = termcolor::Color::Yellow;
 
 pub trait DisplayInColorTerm {
-    fn display_in_color_term(&self, wc: &mut termcolor::WriteColor) -> Result<()>;
+    fn display_in_color_term(&self, wc: &mut dyn termcolor::WriteColor) -> Result<()>;
 }
 
 pub struct YesNoUnknownStatus {
@@ -43,7 +43,7 @@ impl YesNoUnknownStatus {
 }
 
 impl DisplayInColorTerm for YesNoUnknownStatus {
-    fn display_in_color_term(&self, wc: &mut termcolor::WriteColor) -> Result<()> {
+    fn display_in_color_term(&self, wc: &mut dyn termcolor::WriteColor) -> Result<()> {
         let (marker, color) = match self.status {
             Some(true) => (MARKER_GOOD, COLOR_GOOD),
             Some(false) => (MARKER_BAD, COLOR_BAD),
@@ -72,7 +72,7 @@ pub enum PEControlFlowGuardLevel {
 }
 
 impl DisplayInColorTerm for PEControlFlowGuardLevel {
-    fn display_in_color_term(&self, wc: &mut termcolor::WriteColor) -> Result<()> {
+    fn display_in_color_term(&self, wc: &mut dyn termcolor::WriteColor) -> Result<()> {
         let (marker, color) = match self {
             PEControlFlowGuardLevel::Unknown => (MARKER_UNKNOWN, COLOR_UNKNOWN),
             PEControlFlowGuardLevel::Unsupported => (MARKER_BAD, COLOR_BAD),
@@ -109,7 +109,7 @@ pub enum ASLRCompatibilityLevel {
 }
 
 impl DisplayInColorTerm for ASLRCompatibilityLevel {
-    fn display_in_color_term(&self, wc: &mut termcolor::WriteColor) -> Result<()> {
+    fn display_in_color_term(&self, wc: &mut dyn termcolor::WriteColor) -> Result<()> {
         let (marker, color, text) = match self {
             ASLRCompatibilityLevel::Unknown => (MARKER_UNKNOWN, COLOR_UNKNOWN, "ASLR"),
             ASLRCompatibilityLevel::Unsupported => (MARKER_BAD, COLOR_BAD, "ASLR"),
@@ -173,7 +173,7 @@ impl<'t> ELFFortifySourceStatus<'t> {
 }
 
 impl<'t> DisplayInColorTerm for ELFFortifySourceStatus<'t> {
-    fn display_in_color_term(&self, wc: &mut termcolor::WriteColor) -> Result<()> {
+    fn display_in_color_term(&self, wc: &mut dyn termcolor::WriteColor) -> Result<()> {
         let no_protected_functions = self.protected_functions.is_empty();
         let no_unprotected_functions = self.unprotected_functions.is_empty();
 
