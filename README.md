@@ -4,6 +4,20 @@
 
 This tool is written in [Rust](https://www.rust-lang.org/).
 
+## Installation instructions
+
+In order to use this tool on your computer, you need to build it from sources:
+
+1. If you don't have a [Rust](https://www.rust-lang.org/) toolchain installed, then [install one](https://www.rust-lang.org/tools/install). I recommend to install the latest stable toolchain for your computer.
+2. Build the sources:
+   ```
+   cargo install --git 'https://github.com/koutheir/binary-security-check.git'
+   ```
+3. You should be able to run the tool directly:
+   ```
+   binary-security-check -h
+   ```
+
 ## Supported formats
 
 Different executable formats are currently supported:
