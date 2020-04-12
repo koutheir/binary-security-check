@@ -1,4 +1,4 @@
-# Copyright 2018 Koutheir Attouchi.
+# Copyright 2018-2020 Koutheir Attouchi.
 # See the "LICENSE.txt" file at the top-level directory of this distribution.
 #
 # Licensed under the the MIT license. This file may not be copied, modified,
@@ -6,7 +6,7 @@
 
 [package]
 name = "binary-security-check"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
     "Koutheir Attouchi <koutheir@gmail.com>"
     ]

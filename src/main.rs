@@ -1,4 +1,4 @@
-// Copyright 2018 Koutheir Attouchi.
+// Copyright 2018-2020 Koutheir Attouchi.
 // See the "LICENSE.txt" file at the top-level directory of this distribution.
 //
 // Licensed under the the MIT license. This file may not be copied, modified,
@@ -185,6 +185,8 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
 
 /// **[Dangerous]** Returns two bindings for the same value, after storing the value on the heap.
 ///
+/// # Safety
+/// 
 /// This breaks the rules of Rust by allowing aliasing. It is used **only** to store sibling
 /// references based on `ManuallyDrop`.
 /// See `options::status::ELFFortifySourceStatus` and `parser::BinaryParser`.

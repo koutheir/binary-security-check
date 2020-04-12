@@ -1,4 +1,4 @@
-// Copyright 2018 Koutheir Attouchi.
+// Copyright 2018-2020 Koutheir Attouchi.
 // See the "LICENSE.txt" file at the top-level directory of this distribution.
 //
 // Licensed under the the MIT license. This file may not be copied, modified,
@@ -225,7 +225,7 @@ pub fn supports_control_flow_guard(pe: &goblin::pe::PE) -> PEControlFlowGuardLev
 pub fn has_check_sum(pe: &goblin::pe::PE) -> Option<bool> {
     pe.header
         .optional_header
-        .and_then(|header| Some(header.windows_fields.check_sum != 0))
+        .map(|header| header.windows_fields.check_sum != 0)
 }
 
 /// Returns whether the executable can handle addresses larger than 2 Gigabytes.
