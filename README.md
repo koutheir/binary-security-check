@@ -85,6 +85,33 @@ Options:
   -v, --verbose  Verbose logging.
   -h, --help     Show this screen.
   --version      Show version.
+
+If specified, then SPEC can be one of the following versions of the Linux
+Standard Base specifications:
+- lsb1: LSB 1.0.0.
+- lsb1dot1: LSB 1.1.0.
+- lsb1dot2: LSB 1.2.0.
+- lsb1dot3: LSB 1.3.0.
+- lsb2: LSB 2.0.0.
+- lsb2dot0dot1: LSB 2.0.1.
+- lsb2dot1: LSB 2.1.0.
+- lsb3: LSB 3.0.0.
+- lsb3dot1: LSB 3.1.0.
+- lsb3dot2: LSB 3.2.0.
+- lsb4: LSB 4.0.0.
+- lsb4dot1: LSB 4.1.0.
+- lsb5: LSB 5.0.0.
+
+By default, this tool tries to automatically locate the C library in the
+following directories:
+- /lib/
+- /usr/lib/
+- /lib64/
+- /usr/lib64/
+- /lib32/
+- /usr/lib32/
+The tools `readelf` and `ldd` can be used to help find the path of the C library
+needed by the analyzed files, which is given by the --libc parameter.
 ```
 
 ## Miscellaneous features
