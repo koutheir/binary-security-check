@@ -8,7 +8,6 @@ use crate::cmdline::*;
 use crate::errors::*;
 
 use std::sync::Arc;
-use termcolor;
 
 /// A color buffer that can should be written-to from a single thread.
 /// If cloned and given to another thread, then both threads can write to their own color buffer

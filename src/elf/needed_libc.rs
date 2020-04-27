@@ -10,8 +10,6 @@ use crate::elf;
 use crate::errors::*;
 use crate::parser::*;
 
-use goblin;
-use log;
 use regex::{Regex, RegexBuilder};
 use std::collections::HashSet;
 use std::ffi::OsStr;
@@ -179,6 +177,7 @@ impl NeededLibC {
     }
 }
 
+// If this changes, then update the command line reference.
 static KNOWN_LIBC_FILE_LOCATIONS: &[&str] = &[
     "/lib",
     "/usr/lib",

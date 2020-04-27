@@ -9,9 +9,7 @@ use crate::options::status::*;
 use crate::options::*;
 use crate::parser::*;
 
-use goblin;
 use goblin::pe::section_table::*;
-use scroll;
 use scroll::Pread;
 use std::{mem, ptr};
 

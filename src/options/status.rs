@@ -9,7 +9,6 @@ use crate::errors::*;
 
 use std::collections::HashSet;
 use std::mem::ManuallyDrop;
-use termcolor;
 
 pub const MARKER_GOOD: char = '+';
 pub const MARKER_BAD: char = '!';

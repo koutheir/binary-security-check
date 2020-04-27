@@ -10,8 +10,6 @@ use crate::options::status::*;
 use crate::options::*;
 use crate::parser::*;
 
-use goblin;
-
 pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
     let has_stack_protection = ELFStackProtectionOption::default().check(parser)?;
     Ok(vec![has_stack_protection])

@@ -16,8 +16,6 @@ use crate::errors::*;
 use crate::parser::*;
 use crate::pe;
 
-use goblin;
-
 pub trait BinarySecurityOption<'t> {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>>;
 }

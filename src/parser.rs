@@ -7,7 +7,6 @@
 use crate::create_an_alias_to_a_reference;
 use crate::errors::*;
 
-use goblin;
 use memmap::{Mmap, MmapOptions};
 use std::fs::File;
 use std::mem::ManuallyDrop;

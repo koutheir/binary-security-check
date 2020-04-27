@@ -15,8 +15,6 @@ use crate::options::status::*;
 use crate::options::*;
 use crate::parser::*;
 
-use goblin;
-use log;
 use std::collections::HashSet;
 
 pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
