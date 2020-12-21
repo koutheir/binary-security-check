@@ -4,14 +4,21 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use crate::errors::*;
-use crate::options::status::*;
-use crate::options::*;
-use crate::parser::*;
-
-use goblin::pe::section_table::*;
-use scroll::Pread;
 use std::{mem, ptr};
+
+use goblin::pe::section_table::{IMAGE_SCN_CNT_INITIALIZED_DATA, IMAGE_SCN_MEM_READ};
+use log::debug;
+use scroll::Pread;
+
+use crate::errors::Result;
+use crate::options::status::{ASLRCompatibilityLevel, DisplayInColorTerm, PEControlFlowGuardLevel};
+use crate::options::{
+    AddressSpaceLayoutRandomizationOption, BinarySecurityOption, DataExecutionPreventionOption,
+    PEControlFlowGuardOption, PEEnableManifestHandlingOption,
+    PEHandlesAddressesLargerThan2GBOption, PEHasCheckSumOption, PERunsOnlyInAppContainerOption,
+    PESafeStructuredExceptionHandlingOption, RequiresIntegrityCheckOption,
+};
+use crate::parser::BinaryParser;
 
 pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
     let has_checksum = PEHasCheckSumOption::default().check(parser)?;
@@ -57,8 +64,7 @@ pub const IMAGE_DLLCHARACTERISTICS_GUARD_CF: u16 = 0x4000;
 pub const IMAGE_FILE_LARGE_ADDRESS_AWARE: u16 = 0x0020;
 pub const IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA: u16 = 0x0020;
 pub const IMAGE_FILE_RELOCS_STRIPPED: u16 = 0x0001;
-pub const RDATA_CHARACTERISTICS: u32 =
-    IMAGE_SCN_CNT_INITIALIZED_DATA | goblin::pe::section_table::IMAGE_SCN_MEM_READ;
+pub const RDATA_CHARACTERISTICS: u32 = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
 pub const PDATA_CHARACTERISTICS: u32 = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
 
 #[repr(C)]
@@ -199,21 +205,21 @@ pub fn dll_characteristics_bit_is_set(
 pub fn supports_control_flow_guard(pe: &goblin::pe::PE) -> PEControlFlowGuardLevel {
     if let Some(optional_header) = pe.header.optional_header {
         if (optional_header.windows_fields.dll_characteristics & IMAGE_DLLCHARACTERISTICS_GUARD_CF)
-            != 0
+            == 0
         {
+            PEControlFlowGuardLevel::Unsupported
+        } else {
             debug!("Bit 'IMAGE_DLLCHARACTERISTICS_GUARD_CF' is set in 'DllCharacteristics' inside optional Windows header.");
 
             if (optional_header.windows_fields.dll_characteristics
                 & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
-                != 0
+                == 0
             {
+                PEControlFlowGuardLevel::Ineffective
+            } else {
                 debug!("Bit 'IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE' is set in 'DllCharacteristics' inside optional Windows header.");
                 PEControlFlowGuardLevel::Supported
-            } else {
-                PEControlFlowGuardLevel::Ineffective
             }
-        } else {
-            PEControlFlowGuardLevel::Unsupported
         }
     } else {
         PEControlFlowGuardLevel::Unknown
@@ -245,8 +251,12 @@ pub fn supports_aslr(pe: &goblin::pe::PE) -> ASLRCompatibilityLevel {
     } else if let Some(optional_header) = pe.header.optional_header {
         if (optional_header.windows_fields.dll_characteristics
             & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE)
-            != 0
+            == 0
         {
+            // The executable has a preferred address. ASLR will probably not be used, as it might
+            // be expensive to relocate the executable.
+            ASLRCompatibilityLevel::Expensive
+        } else {
             let handles_addresses_larger_than_2_gigabytes =
                 (pe.header.coff_header.characteristics & IMAGE_FILE_LARGE_ADDRESS_AWARE) != 0;
 
@@ -278,10 +288,6 @@ pub fn supports_aslr(pe: &goblin::pe::PE) -> ASLRCompatibilityLevel {
                 // ASLR supported in 32-bits, but below 2G.
                 ASLRCompatibilityLevel::SupportedBelow2G
             }
-        } else {
-            // The executable has a preferred address. ASLR will probably not be used, as it might
-            // be expensive to relocate the executable.
-            ASLRCompatibilityLevel::Expensive
         }
     } else {
         ASLRCompatibilityLevel::Unknown
@@ -392,10 +398,7 @@ fn image_load_configuration_directory_has_safe_seh_handlers(
 
     parser
         .bytes()
-        .pread_with::<ImageLoadConfigDirectory_Size_Type>(
-            config_table_offset_in_file as usize,
-            scroll::LE,
-        )
+        .pread_with::<ImageLoadConfigDirectory_Size_Type>(config_table_offset_in_file, scroll::LE)
         .ok()
         // Only continue if the load configuration table size is big enough to read the number of
         // safe structured exception handlers.
@@ -411,7 +414,7 @@ fn image_load_configuration_directory_has_safe_seh_handlers(
                 parser
                     .bytes()
                     .pread_with::<ImageLoadConfigDirectory64_SEHandlerCount_Type>(
-                        se_handler_count_offset_in_file as usize,
+                        se_handler_count_offset_in_file,
                         scroll::LE,
                     )
             } else {
@@ -419,7 +422,7 @@ fn image_load_configuration_directory_has_safe_seh_handlers(
                 parser
                     .bytes()
                     .pread_with::<ImageLoadConfigDirectory32_SEHandlerCount_Type>(
-                        se_handler_count_offset_in_file as usize,
+                        se_handler_count_offset_in_file,
                         scroll::LE,
                     )
                     // To unify the comparison below, convert the count into the same type as in
@@ -430,11 +433,11 @@ fn image_load_configuration_directory_has_safe_seh_handlers(
         })
         // Return `Some(true)` if the load configuration table references a least one safe
         // structured exception handler.
-        .and_then(|se_handler_count| {
+        .map(|se_handler_count| {
             debug!(
                 "Image load configuration directory defines {} structured exceptions handlers.",
                 se_handler_count
             );
-            Some(se_handler_count > 0)
+            se_handler_count > 0
         })
 }

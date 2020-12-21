@@ -4,10 +4,10 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use crate::cmdline::*;
-use crate::errors::*;
-
 use std::sync::Arc;
+
+use crate::cmdline::ARGS;
+use crate::errors::{ErrorKind, Result, ResultExt};
 
 /// A color buffer that can should be written-to from a single thread.
 /// If cloned and given to another thread, then both threads can write to their own color buffer
@@ -42,7 +42,7 @@ impl Clone for ColorBuffer {
     fn clone(&self) -> Self {
         Self {
             // Increment the reference count of the `BufferWriter`.
-            buffer_writer: self.buffer_writer.clone(),
+            buffer_writer: Arc::clone(&self.buffer_writer),
             // Create a new buffer linked to `buffer_writer`.
             color_buffer: self.buffer_writer.buffer(),
         }

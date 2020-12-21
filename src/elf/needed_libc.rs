@@ -4,17 +4,19 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use super::checked_functions::*;
-use crate::cmdline::*;
-use crate::elf;
-use crate::errors::*;
-use crate::parser::*;
-
-use regex::{Regex, RegexBuilder};
 use std::collections::HashSet;
 use std::ffi::OsStr;
 use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
+
+use failure::format_err;
+use log::{debug, log_enabled};
+use regex::{Regex, RegexBuilder};
+
+use super::checked_functions::{function_is_checked_version, CheckedFunction};
+use crate::cmdline::{LibCSpec, ARGS};
+use crate::errors::{ErrorKind, Result};
+use crate::parser::BinaryParser;
 
 pub struct NeededLibC {
     checked_functions: HashSet<CheckedFunction>,
@@ -66,7 +68,7 @@ impl NeededLibC {
                 // Return the first that can be successfully parsed.
                 .find(Result::is_ok)
                 // Or return an error in case nothing is found or nothing can be parsed.
-                .unwrap_or_else(|| Err(Error::from(ErrorKind::UnrecognizedNeededLibC)))
+                .unwrap_or_else(|| Err(ErrorKind::UnrecognizedNeededLibC.into()))
         }
     }
 
@@ -83,7 +85,7 @@ impl NeededLibC {
             // Return the first that can be successfully parsed.
             .find(Result::is_ok)
             // Or return an error in case nothing is found or nothing can be parsed.
-            .unwrap_or_else(|| Err(Error::from(ErrorKind::NotFoundNeededLibC)))
+            .unwrap_or_else(|| Err(ErrorKind::NotFoundNeededLibC.into()))
     }
 
     fn get_libc_path(location: impl AsRef<OsStr>, file_name: impl AsRef<Path>) -> PathBuf {
@@ -117,15 +119,15 @@ impl NeededLibC {
                         checked_functions: Self::get_checked_functions_elf(elf),
                     })
                 } else {
-                    Err(Error::from(ErrorKind::UnexpectedBinaryFormat))
+                    Err(ErrorKind::UnexpectedBinaryFormat.into())
                 }
             }
 
-            goblin::Object::Unknown(magic) => Err(Error::from(
-                format_err!("Magic: 0x{:016X}", magic).context(ErrorKind::UnsupportedBinaryFormat),
-            )),
+            goblin::Object::Unknown(magic) => Err(format_err!("Magic: 0x{:016X}", magic)
+                .context(ErrorKind::UnsupportedBinaryFormat)
+                .into()),
 
-            _ => Err(Error::from(ErrorKind::UnexpectedBinaryFormat)),
+            _ => Err(ErrorKind::UnexpectedBinaryFormat.into()),
         }
     }
 
@@ -134,7 +136,9 @@ impl NeededLibC {
             .dynsyms
             .iter()
             // Consider only named exported functions, and focus on their name.
-            .filter_map(|symbol| elf::dynamic_symbol_is_named_exported_function(elf, &symbol))
+            .filter_map(|symbol| {
+                crate::elf::dynamic_symbol_is_named_exported_function(elf, &symbol)
+            })
             // Consider only functions that are checked versions of libc functions.
             .filter(|name| function_is_checked_version(name))
             // Make up a new `CheckedFunction` for each found function.
@@ -187,7 +191,7 @@ static KNOWN_LIBC_FILE_LOCATIONS: &[&str] = &[
     "/usr/lib32",
 ];
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref KNOWN_LIBC_PATTERN: Regex = init_known_libc_pattern();
 }
 

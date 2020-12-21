@@ -4,11 +4,13 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use crate::elf;
-
-use docopt::Docopt;
 use std::fmt;
 use std::path::PathBuf;
+
+use docopt::Docopt;
+use serde_derive::Deserialize;
+
+use crate::elf;
 
 #[derive(Debug, Deserialize)]
 pub struct Args {
@@ -20,55 +22,18 @@ pub struct Args {
     pub arg_file: Vec<PathBuf>,
 }
 
+lazy_static::lazy_static! {
+    pub static ref ARGS: Args = parse_command_line();
+}
+
+static PKG_NAME: &str = env!("CARGO_PKG_NAME");
+static PKG_DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
+static PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
+static PKG_AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
+
 fn parse_command_line() -> Args {
     let usage = format!(
-        "{0} version {2}.
-{1}, by {3}.
-
-Usage:
-  {0} [-v] [-c COLOR] [(-s DIR | -l FILE | -i SPEC)] <file>...
-  {0} (-h | --help)
-  {0} --version
-
-Options:
-  -c COLOR, --color=COLOR  Use color in standard output. Either 'auto' or
-                 'always' or 'never' [default: auto].
-  -s DIR, --sysroot=DIR  Set system root for finding the corresponding
-                 C runtime library.
-  -l FILE, --libc=FILE  Set the path of the C runtime library.
-  -i SPEC, --libc-spec=SPEC  Use an internal list of checked functions as
-                 specified by a specification.
-  -v, --verbose  Verbose logging.
-  -h, --help     Show this screen.
-  --version      Show version.
-
-If specified, then SPEC can be one of the following versions of the Linux
-Standard Base specifications:
-- lsb1: LSB 1.0.0.
-- lsb1dot1: LSB 1.1.0.
-- lsb1dot2: LSB 1.2.0.
-- lsb1dot3: LSB 1.3.0.
-- lsb2: LSB 2.0.0.
-- lsb2dot0dot1: LSB 2.0.1.
-- lsb2dot1: LSB 2.1.0.
-- lsb3: LSB 3.0.0.
-- lsb3dot1: LSB 3.1.0.
-- lsb3dot2: LSB 3.2.0.
-- lsb4: LSB 4.0.0.
-- lsb4dot1: LSB 4.1.0.
-- lsb5: LSB 5.0.0.
-
-By default, this tool tries to automatically locate the C library in the
-following directories:
-- /lib/
-- /usr/lib/
-- /lib64/
-- /usr/lib64/
-- /lib32/
-- /usr/lib32/
-The tools `readelf` and `ldd` can be used to help find the path of the C library
-needed by the analyzed files, which is given by the --libc parameter.
-",
+        include_str!("cmdline.docopt"),
         PKG_NAME, PKG_DESCRIPTION, PKG_VERSION, PKG_AUTHORS
     );
 
@@ -78,15 +43,6 @@ needed by the analyzed files, which is given by the --libc parameter.
         .and_then(|d| d.help(true).version(Some(version)).deserialize())
         .unwrap_or_else(|e| e.exit())
 }
-
-lazy_static! {
-    pub static ref ARGS: Args = parse_command_line();
-}
-
-static PKG_NAME: &str = env!("CARGO_PKG_NAME");
-static PKG_DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
-static PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
-static PKG_AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, Deserialize)]

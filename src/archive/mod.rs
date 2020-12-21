@@ -4,11 +4,12 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use crate::elf;
-use crate::errors::*;
-use crate::options::status::*;
-use crate::options::*;
-use crate::parser::*;
+use log::{debug, warn};
+
+use crate::errors::{ErrorKind, Result, ResultExt};
+use crate::options::status::DisplayInColorTerm;
+use crate::options::{BinarySecurityOption, ELFStackProtectionOption};
+use crate::parser::BinaryParser;
 
 pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
     let has_stack_protection = ELFStackProtectionOption::default().check(parser)?;
@@ -46,7 +47,9 @@ fn member_has_stack_protection(member_name: &str, bytes: &[u8]) -> Result<bool> 
         let r = elf
             .syms
             .iter()
-            .filter_map(|ref symbol| elf::symbol_is_named_function_or_unspecified(&elf, symbol))
+            .filter_map(|ref symbol| {
+                crate::elf::symbol_is_named_function_or_unspecified(&elf, symbol)
+            })
             .any(|name| name == "__stack_chk_fail" || name == "__stack_chk_fail_local");
 
         if r {
@@ -55,6 +58,6 @@ fn member_has_stack_protection(member_name: &str, bytes: &[u8]) -> Result<bool> 
         Ok(r)
     } else {
         warn!("Format of archive member '{}' is not 'ELF'.", member_name);
-        Err(Error::from(ErrorKind::UnexpectedBinaryFormat))
+        Err(ErrorKind::UnexpectedBinaryFormat.into())
     }
 }

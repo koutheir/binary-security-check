@@ -7,15 +7,21 @@
 pub mod checked_functions;
 pub mod needed_libc;
 
+use std::collections::HashSet;
+
+use log::{debug, log_enabled, warn};
+
+use crate::cmdline::ARGS;
+use crate::errors::Result;
+use crate::options::status::{ASLRCompatibilityLevel, DisplayInColorTerm};
+use crate::options::{
+    AddressSpaceLayoutRandomizationOption, BinarySecurityOption, ELFFortifySourceOption,
+    ELFImmediateBindingOption, ELFReadOnlyAfterRelocationsOption, ELFStackProtectionOption,
+};
+use crate::parser::BinaryParser;
+
 use self::checked_functions::function_is_checked_version;
 use self::needed_libc::NeededLibC;
-use crate::cmdline::*;
-use crate::errors::*;
-use crate::options::status::*;
-use crate::options::*;
-use crate::parser::*;
-
-use std::collections::HashSet;
 
 pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
     let supports_address_space_layout_randomization =
@@ -175,7 +181,7 @@ pub fn dynamic_symbol_is_named_exported_function<'t>(
                     .get(symbol.st_name)
                     // If we get a symbol for the requested name, then continue only if the
                     // symbol name is valid UTF-8.
-                    .and_then(|result| result.ok())
+                    .and_then(std::result::Result::ok)
                     // Only consider non-empty names.
                     .filter(|name| !name.is_empty());
             }
@@ -201,7 +207,7 @@ pub fn symbol_is_named_function_or_unspecified<'t>(
             .get(symbol.st_name)
             // If we get a symbol for the requested name, then continue only if the
             // symbol name is valid UTF-8.
-            .and_then(|result| result.ok())
+            .and_then(std::result::Result::ok)
             // Only consider non-empty names.
             .filter(|name| !name.is_empty())
     } else {
@@ -220,7 +226,7 @@ fn dynamic_symbol_is_named_function<'t>(
             .get(symbol.st_name)
             // If we get a symbol for the requested name, then continue only if the
             // symbol name is valid UTF-8.
-            .and_then(|result| result.ok())
+            .and_then(std::result::Result::ok)
             // Only consider non-empty names.
             .filter(|name| !name.is_empty())
     } else {
@@ -248,7 +254,7 @@ fn dynamic_symbol_is_named_imported_function<'t>(
                 .get(symbol.st_name)
                 // If we get a symbol for the requested name, then continue only if the
                 // symbol name is valid UTF-8.
-                .and_then(|result| result.ok())
+                .and_then(std::result::Result::ok)
                 // Only consider non-empty names.
                 .filter(|name| !name.is_empty());
         }

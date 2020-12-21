@@ -4,11 +4,11 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use crate::elf::needed_libc::NeededLibC;
-use crate::errors::*;
-
 use std::collections::HashSet;
 use std::mem::ManuallyDrop;
+
+use crate::elf::needed_libc::NeededLibC;
+use crate::errors::{ErrorKind, Result, ResultExt};
 
 pub const MARKER_GOOD: char = '+';
 pub const MARKER_BAD: char = '!';

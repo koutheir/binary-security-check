@@ -6,15 +6,18 @@
 
 pub mod status;
 
-use self::status::*;
 use crate::archive;
 use crate::cmdline;
 use crate::create_an_alias_to_a_reference;
 use crate::elf;
 use crate::elf::needed_libc::NeededLibC;
-use crate::errors::*;
-use crate::parser::*;
+use crate::errors::Result;
+use crate::parser::BinaryParser;
 use crate::pe;
+
+use self::status::{
+    DisplayInColorTerm, ELFFortifySourceStatus, PEControlFlowGuardLevel, YesNoUnknownStatus,
+};
 
 pub trait BinarySecurityOption<'t> {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>>;
@@ -54,10 +57,10 @@ impl<'t> BinarySecurityOption<'t> for PEHasCheckSumOption {
             None
         };
 
-        Ok(Box::new(
-            r.map(|r| YesNoUnknownStatus::new("CHECKSUM", r))
-                .unwrap_or_else(|| YesNoUnknownStatus::unknown("CHECKSUM")),
-        ))
+        Ok(Box::new(r.map_or_else(
+            || YesNoUnknownStatus::unknown("CHECKSUM"),
+            |r| YesNoUnknownStatus::new("CHECKSUM", r),
+        )))
     }
 }
 
@@ -192,7 +195,7 @@ impl<'t> BinarySecurityOption<'t> for AddressSpaceLayoutRandomizationOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
         match parser.object() {
             goblin::Object::PE(ref pe) => Ok(Box::new(pe::supports_aslr(pe))),
-            goblin::Object::Elf(ref elf) => Ok(Box::new(elf::supports_aslr(elf))),
+            goblin::Object::Elf(ref elf_obj) => Ok(Box::new(elf::supports_aslr(elf_obj))),
             _ => Ok(Box::new(YesNoUnknownStatus::unknown("ASLR"))),
         }
     }
@@ -238,8 +241,8 @@ pub struct ELFStackProtectionOption;
 impl<'t> BinarySecurityOption<'t> for ELFStackProtectionOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
         let r = match parser.object() {
-            goblin::Object::Elf(ref elf) => {
-                YesNoUnknownStatus::new("STACK-PROT", elf::has_stack_protection(elf))
+            goblin::Object::Elf(ref elf_obj) => {
+                YesNoUnknownStatus::new("STACK-PROT", elf::has_stack_protection(elf_obj))
             }
 
             goblin::Object::Archive(ref archive) => {

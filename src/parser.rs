@@ -4,13 +4,15 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use crate::create_an_alias_to_a_reference;
-use crate::errors::*;
-
-use memmap::{Mmap, MmapOptions};
 use std::fs::File;
 use std::mem::ManuallyDrop;
 use std::path::Path;
+
+use log::debug;
+use memmap::{Mmap, MmapOptions};
+
+use crate::create_an_alias_to_a_reference;
+use crate::errors::{ErrorKind, Result, ResultExt};
 
 pub struct BinaryParser<'t> {
     map: ManuallyDrop<Box<Mmap>>,

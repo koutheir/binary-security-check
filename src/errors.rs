@@ -4,7 +4,6 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use std::fmt::Display;
 use std::{fmt, result};
 
 pub use failure::{Backtrace, Context, Fail, ResultExt};
@@ -71,9 +70,9 @@ impl Fail for Error {
     }
 }
 
-impl Display for Error {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Display::fmt(&self.inner, f)
+        fmt::Display::fmt(&self.inner, f)
     }
 }
 

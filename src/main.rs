@@ -4,27 +4,6 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-#[macro_use]
-extern crate lazy_static;
-
-#[macro_use]
-extern crate serde_derive;
-
-#[macro_use]
-extern crate failure;
-
-#[macro_use]
-extern crate log;
-
-extern crate docopt;
-extern crate goblin;
-extern crate memmap;
-extern crate rayon;
-extern crate regex;
-extern crate scroll;
-extern crate simplelog;
-extern crate termcolor;
-
 mod archive;
 mod cmdline;
 mod elf;
@@ -34,19 +13,21 @@ mod parser;
 mod pe;
 mod ui;
 
-use crate::cmdline::*;
-use crate::errors::*;
-use crate::parser::*;
-use crate::ui::*;
-
-use rayon::prelude::*;
 use std::io::Write;
 use std::iter;
 use std::path::{Path, PathBuf};
 
+use log::{debug, error};
+use rayon::prelude::*;
+
+use crate::cmdline::{UseColor, ARGS};
+use crate::errors::{Error, ErrorKind, Fail, Result, ResultExt};
+use crate::parser::BinaryParser;
+use crate::ui::ColorBuffer;
+
 fn main() {
     lazy_static::initialize(&ARGS);
-    let _ = init_logging().or_else(|ref r| -> Result<()> {
+    let _ignored = init_logging().or_else(|ref r| -> Result<()> {
         eprintln!("Error: {}", format_error(r));
         Ok(())
     });
@@ -186,7 +167,7 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
 /// **[Dangerous]** Returns two bindings for the same value, after storing the value on the heap.
 ///
 /// # Safety
-/// 
+///
 /// This breaks the rules of Rust by allowing aliasing. It is used **only** to store sibling
 /// references based on `ManuallyDrop`.
 /// See `options::status::ELFFortifySourceStatus` and `parser::BinaryParser`.
