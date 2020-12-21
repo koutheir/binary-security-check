@@ -7,7 +7,7 @@
 use std::sync::Arc;
 
 use crate::cmdline::ARGS;
-use crate::errors::{ErrorKind, Result, ResultExt};
+use crate::errors::{Error, Result};
 
 /// A color buffer that can should be written-to from a single thread.
 /// If cloned and given to another thread, then both threads can write to their own color buffer
@@ -31,9 +31,13 @@ impl ColorBuffer {
     }
 
     pub fn print(&self) -> Result<()> {
-        self.buffer_writer
-            .print(&self.color_buffer)
-            .context(ErrorKind::WriteFile)?;
+        self.buffer_writer.print(&self.color_buffer).map_err(|r| {
+            Error::from_io1(
+                r,
+                "termcolor::BufferWriter::print",
+                "standard output stream",
+            )
+        })?;
         Ok(())
     }
 }

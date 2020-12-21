@@ -6,7 +6,7 @@
 
 use log::{debug, warn};
 
-use crate::errors::{ErrorKind, Result, ResultExt};
+use crate::errors::{Error, Result};
 use crate::options::status::DisplayInColorTerm;
 use crate::options::{BinarySecurityOption, ELFStackProtectionOption};
 use crate::parser::BinaryParser;
@@ -24,7 +24,11 @@ pub fn has_stack_protection(
     for member_name in archive.members() {
         let buffer = archive
             .extract(member_name, bytes)
-            .context(ErrorKind::ExtractArchiveMember)?;
+            .map_err(|source| Error::Goblin1 {
+                operation: "goblin::archive::Archive",
+                param1: member_name.into(),
+                source,
+            })?;
 
         let r = member_has_stack_protection(member_name, buffer)?;
         if r {
@@ -37,7 +41,10 @@ pub fn has_stack_protection(
 /// - [`__stack_chk_fail`](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/baselib---stack-chk-fail-1.html).
 /// - `__stack_chk_fail_local` is present in `libc` when it is stack-protected.
 fn member_has_stack_protection(member_name: &str, bytes: &[u8]) -> Result<bool> {
-    let obj = goblin::Object::parse(bytes).context(ErrorKind::ParseBinary)?;
+    let obj = goblin::Object::parse(bytes).map_err(|source| Error::Goblin {
+        operation: "goblin::Object::parse",
+        source,
+    })?;
 
     if let goblin::Object::Elf(elf) = obj {
         // elf.is_object_file()
@@ -58,6 +65,9 @@ fn member_has_stack_protection(member_name: &str, bytes: &[u8]) -> Result<bool> 
         Ok(r)
     } else {
         warn!("Format of archive member '{}' is not 'ELF'.", member_name);
-        Err(ErrorKind::UnexpectedBinaryFormat.into())
+        Err(Error::UnexpectedBinaryFormat {
+            expected: "ELF",
+            name: member_name.into(),
+        })
     }
 }

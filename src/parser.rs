@@ -12,7 +12,7 @@ use log::debug;
 use memmap::{Mmap, MmapOptions};
 
 use crate::create_an_alias_to_a_reference;
-use crate::errors::{ErrorKind, Result, ResultExt};
+use crate::errors::{Error, Result};
 
 pub struct BinaryParser<'t> {
     map: ManuallyDrop<Box<Mmap>>,
@@ -33,16 +33,21 @@ impl<'t> Drop for BinaryParser<'t> {
 impl<'t> BinaryParser<'t> {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         debug!("Opening binary file '{}'.", path.as_ref().display());
-        let file = File::open(&path).context(ErrorKind::OpenFileForReading)?;
+        let file = File::open(&path)
+            .map_err(|r| Error::from_io1(r, "std::fs::File::open", path.as_ref()))?;
 
         debug!("Mapping binary file '{}'.", path.as_ref().display());
         let map = MmapOptions::new();
-        let map = unsafe { map.map(&file) }.context(ErrorKind::MapReadOnlyFile)?;
+        let map = unsafe { map.map(&file) }
+            .map_err(|r| Error::from_io1(r, "memmap::MmapOptions::map", path.as_ref()))?;
 
         let (map, map_ref) = unsafe { create_an_alias_to_a_reference(map) };
 
         debug!("Parsing binary file '{}'.", path.as_ref().display());
-        let obj = goblin::Object::parse(map_ref).context(ErrorKind::ParseBinary)?;
+        let obj = goblin::Object::parse(map_ref).map_err(|source| Error::Goblin {
+            operation: "goblin::Object::parse",
+            source,
+        })?;
 
         Ok(Self {
             map: ManuallyDrop::new(map),

@@ -4,88 +4,77 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use std::{fmt, result};
+use std::path::PathBuf;
 
-pub use failure::{Backtrace, Context, Fail, ResultExt};
+pub type Result<T> = std::result::Result<T, Error>;
 
-pub type Result<T> = result::Result<T, Error>;
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("{operation}({path}) failed")]
+    IO1 {
+        operation: &'static str,
+        path: PathBuf,
+        #[source]
+        source: std::io::Error,
+        // Add this when `Backtrace` becomes stable.
+        //backtrace: Backtrace,
+    },
 
-/// A plain enum with no data in any of its variants.
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail)]
-pub enum ErrorKind {
-    #[fail(display = "Failed to initialize logging")]
-    LogInitialization,
+    #[error("{operation}() failed")]
+    Goblin {
+        operation: &'static str,
+        #[source]
+        source: goblin::error::Error,
+        // Add this when `Backtrace` becomes stable.
+        //backtrace: Backtrace,
+    },
 
-    #[fail(display = "Failed to open file for reading")]
-    OpenFileForReading,
+    #[error("{operation}({param1}) failed")]
+    Goblin1 {
+        operation: &'static str,
+        param1: String,
+        #[source]
+        source: goblin::error::Error,
+        // Add this when `Backtrace` becomes stable.
+        //backtrace: Backtrace,
+    },
 
-    #[fail(display = "Failed to write to file")]
-    WriteFile,
+    #[error("logging initialization failed")]
+    LogInitialization(#[from] log::SetLoggerError),
 
-    #[fail(display = "Failed to map file contents for read-only access")]
-    MapReadOnlyFile,
+    #[error("Binary format of file '{0}' is not recognized")]
+    UnknownBinaryFormat(PathBuf),
 
-    #[fail(display = "Failed to parse binary file")]
-    ParseBinary,
+    #[error("Binary format of '{name}' is not {expected}")]
+    UnexpectedBinaryFormat {
+        expected: &'static str,
+        name: PathBuf,
+    },
 
-    #[fail(display = "Failed to extract archive member")]
-    ExtractArchiveMember,
+    #[error("Architecture of '{0}' is unexpected")]
+    UnexpectedBinaryArchitecture(PathBuf),
 
-    #[fail(display = "Binary file format is not recognized")]
-    UnknownBinaryFormat,
+    #[error("Binary format '{format}' of file '{path}' is recognized but unsupported")]
+    UnsupportedBinaryFormat { format: String, path: PathBuf },
 
-    #[fail(display = "Binary file format is recognized but unexpected")]
-    UnexpectedBinaryFormat,
-
-    #[fail(display = "Binary file format is recognized but unsupported")]
-    UnsupportedBinaryFormat,
-
-    #[fail(display = "Dependent C runtime library is not recognized")]
+    #[error("Dependent C runtime library is not recognized")]
     UnrecognizedNeededLibC,
 
-    #[fail(display = "Dependent C runtime library was not found")]
-    NotFoundNeededLibC,
+    #[error("Dependent C runtime library '{0}' was not found")]
+    NotFoundNeededLibC(PathBuf),
 }
 
-#[derive(Debug)]
-pub struct Error {
-    inner: Context<ErrorKind>,
-}
-
-/*
 impl Error {
-    pub fn kind(&self) -> ErrorKind {
-        *self.inner.get_context()
-    }
-}
-*/
-
-impl Fail for Error {
-    fn cause(&self) -> Option<&dyn Fail> {
-        self.inner.cause()
-    }
-
-    fn backtrace(&self) -> Option<&Backtrace> {
-        self.inner.backtrace()
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(&self.inner, f)
-    }
-}
-
-impl From<ErrorKind> for Error {
-    fn from(kind: ErrorKind) -> Self {
-        Self {
-            inner: Context::new(kind),
+    pub fn from_io1(
+        source: std::io::Error,
+        operation: &'static str,
+        path: impl Into<PathBuf>,
+    ) -> Self {
+        let path = path.into();
+        Self::IO1 {
+            operation,
+            path,
+            source,
         }
-    }
-}
-
-impl From<Context<ErrorKind>> for Error {
-    fn from(inner: Context<ErrorKind>) -> Self {
-        Self { inner }
     }
 }

@@ -21,7 +21,7 @@ use log::{debug, error};
 use rayon::prelude::*;
 
 use crate::cmdline::{UseColor, ARGS};
-use crate::errors::{Error, ErrorKind, Fail, Result, ResultExt};
+use crate::errors::{Error, Result};
 use crate::parser::BinaryParser;
 use crate::ui::ColorBuffer;
 
@@ -91,31 +91,32 @@ fn run<'args>() -> Result<(SuccessResults<'args>, ErrorResults<'args>)> {
     Ok(result)
 }
 
-fn format_error(r: &Error) -> String {
+fn format_error(mut r: &dyn std::error::Error) -> String {
     // Format the error as a message.
     let mut text = format!("{}.", r);
-    for cause in Fail::iter_causes(r) {
-        text += &format!(" {}.", cause);
+    while let Some(source) = r.source() {
+        text += &format!(" {}.", source);
+        r = source;
     }
     text
 }
 
 fn init_logging() -> Result<()> {
+    use simplelog::{Config, LevelFilter, SimpleLogger, TermLogger, TerminalMode};
+
     let log_level = if ARGS.flag_verbose {
-        simplelog::LevelFilter::Debug
+        LevelFilter::Debug
     } else {
-        simplelog::LevelFilter::Info
+        LevelFilter::Info
     };
 
-    let log_config = simplelog::Config::default();
+    let log_config = Config::default();
 
     match ARGS.flag_color {
-        UseColor::never => simplelog::SimpleLogger::init(log_level, log_config)
-            .context(ErrorKind::LogInitialization)?,
+        UseColor::never => SimpleLogger::init(log_level, log_config)?,
 
         UseColor::auto | UseColor::always => {
-            simplelog::TermLogger::init(log_level, log_config, simplelog::TerminalMode::Stderr)
-                .context(ErrorKind::LogInitialization)?
+            TermLogger::init(log_level, log_config, TerminalMode::Stderr)?
         }
     }
 
@@ -139,7 +140,10 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
 
         goblin::Object::Mach(ref _mach) => {
             debug!("Binary file format is 'MACH'.");
-            Err(Error::from(ErrorKind::UnsupportedBinaryFormat))
+            Err(Error::UnsupportedBinaryFormat {
+                format: "MACH".into(),
+                path: path.as_ref().into(),
+            })
         }
 
         goblin::Object::Archive(ref _archive) => {
@@ -147,7 +151,7 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
             archive::analyze_binary(&parser)
         }
 
-        goblin::Object::Unknown(_magic) => Err(Error::from(ErrorKind::UnknownBinaryFormat)),
+        goblin::Object::Unknown(_magic) => Err(Error::UnknownBinaryFormat(path.as_ref().into())),
     }?;
 
     // Print results in the color buffer.
@@ -155,12 +159,13 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
     if let Some(first) = iter.next() {
         first.as_ref().display_in_color_term(color_buffer)?;
         for opt in iter {
-            write!(color_buffer, " ").context(ErrorKind::WriteFile)?;
+            write!(color_buffer, " ")
+                .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
             opt.as_ref().display_in_color_term(color_buffer)?;
         }
     }
 
-    writeln!(color_buffer).context(ErrorKind::WriteFile)?;
+    writeln!(color_buffer).map_err(|r| Error::from_io1(r, "writeln", "standard output stream"))?;
     Ok(())
 }
 

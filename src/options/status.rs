@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use std::mem::ManuallyDrop;
 
 use crate::elf::needed_libc::NeededLibC;
-use crate::errors::{ErrorKind, Result, ResultExt};
+use crate::errors::{Error, Result};
 
 pub const MARKER_GOOD: char = '+';
 pub const MARKER_BAD: char = '!';
@@ -50,10 +50,19 @@ impl DisplayInColorTerm for YesNoUnknownStatus {
         };
 
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(color)))
-            .context(ErrorKind::WriteFile)?;
-        write!(wc, "{}{}", marker, self.name).context(ErrorKind::WriteFile)?;
-        wc.reset().context(ErrorKind::WriteFile)?;
-        Ok(())
+            .map_err(|r| {
+                Error::from_io1(
+                    r,
+                    "termcolor::WriteColor::set_color",
+                    "standard output stream",
+                )
+            })?;
+
+        write!(wc, "{}{}", marker, self.name)
+            .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
+        wc.reset().map_err(|r| {
+            Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
+        })
     }
 }
 
@@ -80,10 +89,19 @@ impl DisplayInColorTerm for PEControlFlowGuardLevel {
         };
 
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(color)))
-            .context(ErrorKind::WriteFile)?;
-        write!(wc, "{}CONTROL-FLOW-GUARD", marker).context(ErrorKind::WriteFile)?;
-        wc.reset().context(ErrorKind::WriteFile)?;
-        Ok(())
+            .map_err(|r| {
+                Error::from_io1(
+                    r,
+                    "termcolor::WriteColor::set_color",
+                    "standard output stream",
+                )
+            })?;
+
+        write!(wc, "{}CONTROL-FLOW-GUARD", marker)
+            .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
+        wc.reset().map_err(|r| {
+            Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
+        })
     }
 }
 
@@ -126,10 +144,19 @@ impl DisplayInColorTerm for ASLRCompatibilityLevel {
         };
 
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(color)))
-            .context(ErrorKind::WriteFile)?;
-        write!(wc, "{}{}", marker, text).context(ErrorKind::WriteFile)?;
-        wc.reset().context(ErrorKind::WriteFile)?;
-        Ok(())
+            .map_err(|r| {
+                Error::from_io1(
+                    r,
+                    "termcolor::WriteColor::set_color",
+                    "standard output stream",
+                )
+            })?;
+
+        write!(wc, "{}{}", marker, text)
+            .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
+        wc.reset().map_err(|r| {
+            Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
+        })
     }
 }
 
@@ -192,32 +219,48 @@ impl<'t> DisplayInColorTerm for ELFFortifySourceStatus<'t> {
             (false, false) => (MARKER_MAYBE, COLOR_UNKNOWN),
         };
 
-        wc.set_color(termcolor::ColorSpec::new().set_fg(Some(color)))
-            .context(ErrorKind::WriteFile)?;
-        write!(wc, "{}FORTIFY-SOURCE", marker).context(ErrorKind::WriteFile)?;
-        wc.reset().context(ErrorKind::WriteFile)?;
+        let set_color_err = |r| {
+            Error::from_io1(
+                r,
+                "termcolor::WriteColor::set_color",
+                "standard output stream",
+            )
+        };
 
-        write!(wc, "(").context(ErrorKind::WriteFile)?;
+        wc.set_color(termcolor::ColorSpec::new().set_fg(Some(color)))
+            .map_err(set_color_err)?;
+
+        write!(wc, "{}FORTIFY-SOURCE", marker)
+            .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
+        wc.reset().map_err(|r| {
+            Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
+        })?;
+
+        write!(wc, "(").map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
 
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(COLOR_GOOD)))
-            .context(ErrorKind::WriteFile)?;
+            .map_err(set_color_err)?;
 
         let mut separator = "";
         for name in &*self.protected_functions {
-            write!(wc, "{}{}{}", separator, MARKER_GOOD, name).context(ErrorKind::WriteFile)?;
+            write!(wc, "{}{}{}", separator, MARKER_GOOD, name)
+                .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
             separator = ",";
         }
 
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(COLOR_BAD)))
-            .context(ErrorKind::WriteFile)?;
+            .map_err(set_color_err)?;
 
         for name in &*self.unprotected_functions {
-            write!(wc, "{}{}{}", separator, MARKER_BAD, name).context(ErrorKind::WriteFile)?;
+            write!(wc, "{}{}{}", separator, MARKER_BAD, name)
+                .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
             separator = ",";
         }
 
-        wc.reset().context(ErrorKind::WriteFile)?;
-        writeln!(wc, ")").context(ErrorKind::WriteFile)?;
+        wc.reset().map_err(|r| {
+            Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
+        })?;
+        writeln!(wc, ")").map_err(|r| Error::from_io1(r, "writeln", "standard output stream"))?;
         Ok(())
     }
 }

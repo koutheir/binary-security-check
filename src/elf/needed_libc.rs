@@ -9,13 +9,12 @@ use std::ffi::OsStr;
 use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
 
-use failure::format_err;
 use log::{debug, log_enabled};
 use regex::{Regex, RegexBuilder};
 
 use super::checked_functions::{function_is_checked_version, CheckedFunction};
 use crate::cmdline::{LibCSpec, ARGS};
-use crate::errors::{ErrorKind, Result};
+use crate::errors::{Error, Result};
 use crate::parser::BinaryParser;
 
 pub struct NeededLibC {
@@ -68,7 +67,7 @@ impl NeededLibC {
                 // Return the first that can be successfully parsed.
                 .find(Result::is_ok)
                 // Or return an error in case nothing is found or nothing can be parsed.
-                .unwrap_or_else(|| Err(ErrorKind::UnrecognizedNeededLibC.into()))
+                .unwrap_or(Err(Error::UnrecognizedNeededLibC))
         }
     }
 
@@ -85,7 +84,7 @@ impl NeededLibC {
             // Return the first that can be successfully parsed.
             .find(Result::is_ok)
             // Or return an error in case nothing is found or nothing can be parsed.
-            .unwrap_or_else(|| Err(ErrorKind::NotFoundNeededLibC.into()))
+            .unwrap_or_else(|| Err(Error::NotFoundNeededLibC(file_name.as_ref().into())))
     }
 
     fn get_libc_path(location: impl AsRef<OsStr>, file_name: impl AsRef<Path>) -> PathBuf {
@@ -119,15 +118,19 @@ impl NeededLibC {
                         checked_functions: Self::get_checked_functions_elf(elf),
                     })
                 } else {
-                    Err(ErrorKind::UnexpectedBinaryFormat.into())
+                    Err(Error::UnexpectedBinaryArchitecture(path.as_ref().into()))
                 }
             }
 
-            goblin::Object::Unknown(magic) => Err(format_err!("Magic: 0x{:016X}", magic)
-                .context(ErrorKind::UnsupportedBinaryFormat)
-                .into()),
+            goblin::Object::Unknown(magic) => Err(Error::UnsupportedBinaryFormat {
+                format: format!("Magic: 0x{:016X}", magic),
+                path: path.as_ref().into(),
+            }),
 
-            _ => Err(ErrorKind::UnexpectedBinaryFormat.into()),
+            _ => Err(Error::UnexpectedBinaryFormat {
+                expected: "ELF",
+                name: path.as_ref().into(),
+            }),
         }
     }
 
