@@ -168,21 +168,3 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
     writeln!(color_buffer).map_err(|r| Error::from_io1(r, "writeln", "standard output stream"))?;
     Ok(())
 }
-
-/// **[Dangerous]** Returns two bindings for the same value, after storing the value on the heap.
-///
-/// # Safety
-///
-/// This breaks the rules of Rust by allowing aliasing. It is used **only** to store sibling
-/// references based on `ManuallyDrop`.
-/// See `options::status::ELFFortifySourceStatus` and `parser::BinaryParser`.
-pub unsafe fn create_an_alias_to_a_reference<T>(value: T) -> (Box<T>, &'static T) {
-    // Move `value` to the heap to give it a stable address. Then leak the value as a static
-    // mutable reference.
-    let value_ref: &'static mut T = Box::leak(Box::new(value));
-    // Create a `Box` that owns the value on the heap. It enables removing the value later.
-    // ** Due to this, it is the responsibility of the caller to ensure that the "static" **
-    // ** reference is not used after the box is dropped. **
-    let value = Box::from_raw(value_ref as *mut _);
-    (value, value_ref)
-}

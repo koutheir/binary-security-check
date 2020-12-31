@@ -6,14 +6,10 @@
 
 pub mod status;
 
-use crate::archive;
-use crate::cmdline;
-use crate::create_an_alias_to_a_reference;
-use crate::elf;
 use crate::elf::needed_libc::NeededLibC;
 use crate::errors::Result;
 use crate::parser::BinaryParser;
-use crate::pe;
+use crate::{archive, cmdline, elf, pe};
 
 use self::status::{
     DisplayInColorTerm, ELFFortifySourceStatus, PEControlFlowGuardLevel, YesNoUnknownStatus,
@@ -289,16 +285,8 @@ impl<'t> BinarySecurityOption<'t> for ELFFortifySourceOption {
                 NeededLibC::find_needed_by_executable(elf)?
             };
 
-            let (libc, libc_ref) = unsafe { create_an_alias_to_a_reference(libc) };
-
-            let (protected_functions, unprotected_functions) =
-                elf::get_libc_functions_by_protection(elf, libc_ref);
-
-            Ok(Box::new(ELFFortifySourceStatus::new(
-                libc,
-                protected_functions,
-                unprotected_functions,
-            )))
+            let result = ELFFortifySourceStatus::new(libc, elf)?;
+            Ok(Box::new(result))
         } else {
             Ok(Box::new(YesNoUnknownStatus::unknown("FORTIFY-SOURCE")))
         }

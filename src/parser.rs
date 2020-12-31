@@ -4,62 +4,87 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use std::fs::File;
-use std::mem::ManuallyDrop;
+use std::marker::PhantomPinned;
 use std::path::Path;
+use std::pin::Pin;
+use std::{fs, ptr};
 
 use log::debug;
 use memmap::{Mmap, MmapOptions};
 
-use crate::create_an_alias_to_a_reference;
 use crate::errors::{Error, Result};
 
-pub struct BinaryParser<'t> {
-    map: ManuallyDrop<Box<Mmap>>,
-    obj: ManuallyDrop<goblin::Object<'t>>,
+pub struct BinaryParser {
+    bytes: Mmap,
+    object: Option<goblin::Object<'static>>,
+    _pin: PhantomPinned,
 }
 
-impl<'t> Drop for BinaryParser<'t> {
-    fn drop(&mut self) {
-        unsafe {
-            // The dropping order is important.
-            ManuallyDrop::drop(&mut self.obj);
-
-            ManuallyDrop::drop(&mut self.map);
-        }
-    }
-}
-
-impl<'t> BinaryParser<'t> {
-    pub fn open(path: impl AsRef<Path>) -> Result<Self> {
+impl BinaryParser {
+    pub fn open(path: impl AsRef<Path>) -> Result<Pin<Box<Self>>> {
         debug!("Opening binary file '{}'.", path.as_ref().display());
-        let file = File::open(&path)
+        let file = fs::File::open(&path)
             .map_err(|r| Error::from_io1(r, "std::fs::File::open", path.as_ref()))?;
 
         debug!("Mapping binary file '{}'.", path.as_ref().display());
-        let map = MmapOptions::new();
-        let map = unsafe { map.map(&file) }
+        let bytes = unsafe { MmapOptions::new().map(&file) }
             .map_err(|r| Error::from_io1(r, "memmap::MmapOptions::map", path.as_ref()))?;
 
-        let (map, map_ref) = unsafe { create_an_alias_to_a_reference(map) };
+        let mut result = Box::pin(Self {
+            bytes,
+            object: None,
+            _pin: PhantomPinned,
+        });
+
+        // `result` is now allocated, initialized and pinned on the heap.
+        // Its location is therefore stable, and we can store references to it
+        // in other places.
+        //
+        // Construct a reference to `result.bytes` that lives for the 'static
+        // life time:
+        //     &ref => pointer => 'static ref
+        //
+        // This is safe because the `Drop` implementation drops `Self::object`
+        // before `Self::bytes`.
+        let bytes_ref: &'static Mmap =
+            unsafe { ptr::NonNull::from(&result.bytes).as_ptr().as_ref().unwrap() };
 
         debug!("Parsing binary file '{}'.", path.as_ref().display());
-        let obj = goblin::Object::parse(map_ref).map_err(|source| Error::Goblin {
+        let object = goblin::Object::parse(bytes_ref).map_err(|source| Error::Goblin {
             operation: "goblin::Object::parse",
             source,
         })?;
 
-        Ok(Self {
-            map: ManuallyDrop::new(map),
-            obj: ManuallyDrop::new(obj),
-        })
+        result.as_mut().set_object(Some(object));
+        Ok(result)
     }
 
     pub fn object(&self) -> &goblin::Object {
-        &self.obj
+        // SAFETY: All instances of `Self` that are created and still in scope
+        // must have `Some(_)` in the `object` field.
+        self.object.as_ref().unwrap()
     }
 
     pub fn bytes(&self) -> &[u8] {
-        &self.map
+        &self.bytes
+    }
+
+    fn set_object(mut self: Pin<&mut Self>, object: Option<goblin::Object<'static>>) {
+        let this = Pin::as_mut(&mut self);
+
+        // SAFETY: Storing to the field `object` does not move `this`.
+        unsafe { Pin::get_unchecked_mut(this) }.object = object;
+    }
+
+    fn drop_pinned(self: Pin<&mut Self>) {
+        // SAFETY: Drop `object` before `bytes` is dropped.
+        self.set_object(None);
+    }
+}
+
+impl Drop for BinaryParser {
+    fn drop(&mut self) {
+        // SAFETY: All instances of `Self` are pinned.
+        unsafe { Pin::new_unchecked(self) }.drop_pinned();
     }
 }

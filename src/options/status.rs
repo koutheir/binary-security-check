@@ -5,8 +5,11 @@
 // or distributed except according to those terms.
 
 use std::collections::HashSet;
-use std::mem::ManuallyDrop;
+use std::marker::PhantomPinned;
+use std::pin::Pin;
+use std::ptr::NonNull;
 
+use crate::elf;
 use crate::elf::needed_libc::NeededLibC;
 use crate::errors::{Error, Result};
 
@@ -160,45 +163,68 @@ impl DisplayInColorTerm for ASLRCompatibilityLevel {
     }
 }
 
-pub struct ELFFortifySourceStatus<'t> {
-    /// `'t` is the lifetime of this field, which is on the Heap (so its address is stable).
-    libc: ManuallyDrop<Box<NeededLibC>>,
-
-    /// `'t` is the lifetime of `libc`.
-    protected_functions: ManuallyDrop<HashSet<&'t str>>,
-
-    /// `'t` is the lifetime of `libc`.
-    unprotected_functions: ManuallyDrop<HashSet<&'t str>>,
+pub struct ELFFortifySourceStatus {
+    libc: NeededLibC,
+    protected_functions: HashSet<&'static str>,
+    unprotected_functions: HashSet<&'static str>,
+    _pin: PhantomPinned,
 }
 
-impl<'t> Drop for ELFFortifySourceStatus<'t> {
+impl ELFFortifySourceStatus {
+    pub fn new(libc: NeededLibC, elf_object: &goblin::elf::Elf) -> Result<Pin<Box<Self>>> {
+        let mut result = Box::pin(Self {
+            libc,
+            protected_functions: HashSet::default(),
+            unprotected_functions: HashSet::default(),
+            _pin: PhantomPinned,
+        });
+
+        // `result` is now allocated, initialized and pinned on the heap.
+        // Its location is therefore stable, and we can store references to it
+        // in other places.
+        //
+        // Construct a reference to `result.libc` that lives for the 'static
+        // life time:
+        //     &ref => pointer => 'static ref
+        //
+        // This is safe because the `Drop` implementation drops the fields
+        // `Self::protected_functions` and `Self::unprotected_functions`
+        // before the field `Self::libc`.
+        let libc_ref: &'static NeededLibC =
+            unsafe { NonNull::from(&result.libc).as_ptr().as_ref().unwrap() };
+
+        let (prot_fn, unprot_fn) = elf::get_libc_functions_by_protection(elf_object, libc_ref);
+
+        // SAFETY: Storing to the field `protected_functions` does not move `result`.
+        unsafe { Pin::get_unchecked_mut(result.as_mut()) }.protected_functions = prot_fn;
+
+        // SAFETY: Storing to the field `unprotected_functions` does not move `result`.
+        unsafe { Pin::get_unchecked_mut(result.as_mut()) }.unprotected_functions = unprot_fn;
+
+        Ok(result)
+    }
+
+    fn drop_pinned(mut self: Pin<&mut Self>) {
+        // SAFETY: Drop fields `protected_functions` and `unprotected_functions`
+        // before field `libc` is dropped.
+        let this = Pin::as_mut(&mut self);
+
+        // SAFETY: Calling `HashSet::clear()` does not move `this`.
+        let this = unsafe { Pin::get_unchecked_mut(this) };
+
+        this.protected_functions.clear();
+        this.unprotected_functions.clear();
+    }
+}
+
+impl Drop for ELFFortifySourceStatus {
     fn drop(&mut self) {
-        unsafe {
-            // Drop values that reference `libc`.
-            ManuallyDrop::drop(&mut self.protected_functions);
-            ManuallyDrop::drop(&mut self.unprotected_functions);
-
-            // Drop the `libc` value once all references to it are no more alive.
-            ManuallyDrop::drop(&mut self.libc);
-        }
+        // SAFETY: All instances of `Self` are pinned.
+        unsafe { Pin::new_unchecked(self) }.drop_pinned();
     }
 }
 
-impl<'t> ELFFortifySourceStatus<'t> {
-    pub fn new(
-        libc: Box<NeededLibC>,
-        protected_functions: HashSet<&'t str>,
-        unprotected_functions: HashSet<&'t str>,
-    ) -> Self {
-        Self {
-            libc: ManuallyDrop::new(libc),
-            protected_functions: ManuallyDrop::new(protected_functions),
-            unprotected_functions: ManuallyDrop::new(unprotected_functions),
-        }
-    }
-}
-
-impl<'t> DisplayInColorTerm for ELFFortifySourceStatus<'t> {
+impl DisplayInColorTerm for Pin<Box<ELFFortifySourceStatus>> {
     fn display_in_color_term(&self, wc: &mut dyn termcolor::WriteColor) -> Result<()> {
         let no_protected_functions = self.protected_functions.is_empty();
         let no_unprotected_functions = self.unprotected_functions.is_empty();
@@ -242,7 +268,7 @@ impl<'t> DisplayInColorTerm for ELFFortifySourceStatus<'t> {
             .map_err(set_color_err)?;
 
         let mut separator = "";
-        for name in &*self.protected_functions {
+        for name in self.protected_functions.iter() {
             write!(wc, "{}{}{}", separator, MARKER_GOOD, name)
                 .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
             separator = ",";
@@ -251,7 +277,7 @@ impl<'t> DisplayInColorTerm for ELFFortifySourceStatus<'t> {
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(COLOR_BAD)))
             .map_err(set_color_err)?;
 
-        for name in &*self.unprotected_functions {
+        for name in self.unprotected_functions.iter() {
             write!(wc, "{}{}{}", separator, MARKER_BAD, name)
                 .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
             separator = ",";
