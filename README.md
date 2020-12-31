@@ -1,22 +1,27 @@
 # Analyzer of security features in executable binaries
 
-`binary-security-check` is a command line utility that analyses executable binaries looking for features that make the executable more secure, or less prone to some vulnerabilities.
-
-This tool is written in [Rust](https://www.rust-lang.org/).
+`binary-security-check` is a command line utility that analyses executable
+binaries looking for features that make the executable more secure,
+or less prone to some vulnerabilities.
 
 ## Installation instructions
 
 In order to use this tool on your computer, you need to build it from sources:
 
-1. If you don't have a [Rust](https://www.rust-lang.org/) toolchain installed, then [install one](https://www.rust-lang.org/tools/install). I recommend to install the latest stable toolchain for your computer.
+1. If you don't have a [Rust](https://www.rust-lang.org/) toolchain installed,
+   then [install one](https://www.rust-lang.org/tools/install).
+   I recommend to install the latest stable toolchain for your computer.
+
 2. Install a C toolchain for your computer. For example on Debian Linux:
    ```
    sudo apt-get install build-essential
    ```
+
 3. Build the sources:
    ```
-   cargo install --git 'https://github.com/koutheir/binary-security-check.git'
+   cargo install binary-security-check
    ```
+
 4. You should be able to run the tool directly:
    ```
    binary-security-check -h
@@ -26,13 +31,21 @@ In order to use this tool on your computer, you need to build it from sources:
 
 Different executable formats are currently supported:
 
-- `ELF` format in 32-bits and 64-bits variants. It is used, for instance, in Linux and BSD executable programs and shared libraries. These files usually have either no extension, or the `.so` extension.
-- `Archive` format, used in static libraries storing object files. It is used, for example, in Linux and Windows static libraries.  These files usually have one of the following extensions: `.a`, `.lib`, etc.
-- `PE32` format (32-bits variant) and `PE32+` format (64-bits variant) used by Windows executable programs and shared libraries. These files usually have one of the following extensions: `.exe`, `.scr`, `.dll`, `.sys`, etc. 16-bits executable binaries are not supported.
+- `ELF` format in 32-bits and 64-bits variants.
+  It is used, for instance, in Linux and BSD executable programs and shared libraries.
+  These files usually have either no extension, or the `.so` extension.
+- `Archive` format, used in static libraries storing object files.
+  It is used, for example, in Linux and Windows static libraries.
+  These files usually have one of the following extensions: `.a`, `.lib`, etc.
+- `PE32` format (32-bits variant) and `PE32+` format (64-bits variant) used by
+  Windows executable programs and shared libraries.
+  These files usually have one of the following extensions: `.exe`, `.scr`, `.dll`, `.sys`, etc.
+  16-bits executable binaries are not supported.
 
 ## Reported security features:
 
-The list of security features analyzed by `binary-security-check` depends on the analyzed format. Each security feature has a keyword identifying it in the report.
+The list of security features analyzed by `binary-security-check` depends on the analyzed format.
+Each security feature has a keyword identifying it in the report.
 
 For the `ELF` format, the analyzed features are:
 
@@ -60,7 +73,8 @@ For `PE32` and `PE32+` formats, the analyzed features are:
 
 ## Reporting format
 
-The program can analyze multiple binary files. For each file, it displays the file path, and the status of the checked security features.
+The program can analyze multiple binary files.
+For each file, it displays the file path, and the status of the checked security features.
 
 The status of the security feature in the binary is indicated by a letter before the keyword:
 - `+` means the feature is present/supported.
@@ -126,8 +140,10 @@ needed by the analyzed files, which is given by the --libc parameter.
 - Output colored text.
 - Support multiple ways to identify binary's dependent C library, including Linux Standard Base (LSB) specifications.
 - Designed to be easily extensible.
-- The compiled version of the tool is statically linked, allowing it to run on many Linux distributions, and many versions of Windows.
 
 # License
 
-Copyright 2018-2020 Koutheir Attouchi. See the `LICENSE.txt` file at the top-level directory of this distribution. Licensed under the the MIT license. This file may not be copied, modified, or distributed except according to those terms.
+Copyright 2018-2020 Koutheir Attouchi. See the `LICENSE.txt` file
+at the top-level directory of this distribution.
+Licensed under the the MIT license.
+This file may not be copied, modified, or distributed except according to those terms.
