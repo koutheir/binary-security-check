@@ -16,16 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      #- name: Enable multiarch support
-      #  run: dpkg --add-architecture i386
+      - name: Enable multiarch support
+        run: sudo dpkg --add-architecture i386
 
       - name: Update packages data base
-        run: apt-get update --quiet
+        run: sudo apt-get update --quiet
 
       - name: Install C/C++ toolchains
         run: |
-          apt-get install --quiet --no-install-recommends --yes dialog perl6-readline
-          apt-get install --quiet --no-install-recommends --yes clang lld musl-dev mingw-w64 wine wine32 wine64
+          sudo apt-get install --quiet --no-install-recommends --yes dialog perl6-readline
+          sudo apt-get install --quiet --no-install-recommends --yes clang lld musl-dev mingw-w64 wine wine32 wine64
 
       - name: Install rustc targets
         run: rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl armv7-unknown-linux-musleabihf x86_64-pc-windows-gnu
