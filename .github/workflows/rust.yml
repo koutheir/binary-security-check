@@ -23,7 +23,7 @@ jobs:
         run: sudo apt-get update --quiet
 
       - name: Install C/C++ toolchains
-        run: sudo apt-get install --quiet --no-install-recommends --yes dialog clang lld musl-dev mingw-w64 wine-stable
+        run: sudo apt-get install --quiet --no-install-recommends --yes dialog clang lld musl-dev mingw-w64 wine-stable wine32
 
       - name: Install rustc targets
         run: rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl armv7-unknown-linux-musleabihf x86_64-pc-windows-gnu
