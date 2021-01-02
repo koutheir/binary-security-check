@@ -80,7 +80,7 @@ jobs:
         run: sudo apt-get update --quiet
 
       - name: Install C/C++ toolchains
-        run: sudo apt-get install --quiet --no-install-recommends --yes dialog clang lld mingw-w64 wine-stable wine32
+        run: sudo apt-get install --quiet --no-install-recommends --yes dialog clang lld mingw-w64 wine-stable wine64 wine32
 
       - name: Install rustc target
         run: rustup target add x86_64-pc-windows-gnu
