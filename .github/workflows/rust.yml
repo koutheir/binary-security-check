@@ -24,7 +24,7 @@ jobs:
 
       - name: Install C/C++ toolchains
         run: |
-          sudo apt-get install --quiet --no-install-recommends --yes dialog perl6-readline
+          sudo apt-get install --quiet --no-install-recommends --yes dialog
           sudo apt-get install --quiet --no-install-recommends --yes clang lld musl-dev mingw-w64 wine wine32 wine64
 
       - name: Install rustc targets
