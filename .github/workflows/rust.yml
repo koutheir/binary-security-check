@@ -15,7 +15,35 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: cargo build --verbose
-      - name: Run tests
-        run: cargo test --verbose
+
+      - name: Enable multiarch support
+        run: dpkg --add-architecture i386
+
+      - name: Update packages data base
+        run: apt-get update --quiet
+
+      - name: Install C/C++ toolchains
+        run: |
+          apt-get install --quiet --no-install-recommends --yes dialog perl6-readline
+          apt-get install --quiet --no-install-recommends --yes clang lld musl-dev mingw-w64 wine wine32 wine64
+
+      - name: Install rustc targets
+        run: rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl armv7-unknown-linux-musleabihf x86_64-pc-windows-gnu
+
+      - name: Build (target x86_64-unknown-linux-musl)
+        run: cargo build --verbose --target=x86_64-unknown-linux-musl
+
+      - name: Build (target aarch64-unknown-linux-musl)
+        run: cargo build --verbose --target=aarch64-unknown-linux-musl
+
+      - name: Build (target armv7-unknown-linux-musleabihf)
+        run: cargo build --verbose --target=armv7-unknown-linux-musleabihf
+
+      - name: Build (target x86_64-pc-windows-gnu)
+        run: cargo build --verbose --target=x86_64-pc-windows-gnu
+
+      - name: Tests (target x86_64-unknown-linux-musl)
+        run: cargo test --verbose --target=x86_64-unknown-linux-musl
+
+      - name: Tests (target x86_64-pc-windows-gnu)
+        run: cargo test --verbose --target=x86_64-pc-windows-gnu
