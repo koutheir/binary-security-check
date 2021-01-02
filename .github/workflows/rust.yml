@@ -16,8 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Enable multiarch support
-        run: dpkg --add-architecture i386
+      #- name: Enable multiarch support
+      #  run: dpkg --add-architecture i386
 
       - name: Update packages data base
         run: apt-get update --quiet
