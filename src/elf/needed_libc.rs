@@ -6,7 +6,6 @@
 
 use std::collections::HashSet;
 use std::ffi::OsStr;
-use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
 
 use log::{debug, log_enabled};
@@ -46,11 +45,10 @@ impl NeededLibC {
         }
 
         Self {
-            checked_functions: HashSet::from_iter(
-                functions_with_checked_versions
-                    .iter()
-                    .map(|name| CheckedFunction::from_unchecked_name(name)),
-            ),
+            checked_functions: functions_with_checked_versions
+                .iter()
+                .map(|name| CheckedFunction::from_unchecked_name(name))
+                .collect(),
         }
     }
 
