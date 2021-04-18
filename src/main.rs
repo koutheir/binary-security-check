@@ -1,3 +1,5 @@
+#![allow(clippy::upper_case_acronyms, clippy::unnecessary_wraps)]
+
 // Copyright 2018-2021 Koutheir Attouchi.
 // See the "LICENSE.txt" file at the top-level directory of this distribution.
 //
@@ -102,7 +104,7 @@ fn format_error(mut r: &dyn std::error::Error) -> String {
 }
 
 fn init_logging() -> Result<()> {
-    use simplelog::{Config, LevelFilter, SimpleLogger, TermLogger, TerminalMode};
+    use simplelog::{ColorChoice, Config, LevelFilter, SimpleLogger, TermLogger, TerminalMode};
 
     let log_level = if ARGS.flag_verbose {
         LevelFilter::Debug
@@ -115,9 +117,12 @@ fn init_logging() -> Result<()> {
     match ARGS.flag_color {
         UseColor::never => SimpleLogger::init(log_level, log_config)?,
 
-        UseColor::auto | UseColor::always => {
-            TermLogger::init(log_level, log_config, TerminalMode::Stderr)?
-        }
+        UseColor::auto | UseColor::always => TermLogger::init(
+            log_level,
+            log_config,
+            TerminalMode::Stderr,
+            ColorChoice::Auto,
+        )?,
     }
 
     debug!("{:?}", *ARGS);
