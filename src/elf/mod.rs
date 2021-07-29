@@ -178,12 +178,8 @@ pub fn dynamic_symbol_is_named_exported_function<'t>(
             {
                 return elf
                     .dynstrtab
-                    .get(symbol.st_name)
-                    // If we get a symbol for the requested name, then continue only if the
-                    // symbol name is valid UTF-8.
-                    .and_then(std::result::Result::ok)
-                    // Only consider non-empty names.
-                    .filter(|name| !name.is_empty());
+                    .get_at(symbol.st_name)
+                    .filter(|name| !name.is_empty()); // Only consider non-empty names.
             }
         }
     }
@@ -204,12 +200,8 @@ pub fn symbol_is_named_function_or_unspecified<'t>(
         || st_type == goblin::elf::sym::STT_NOTYPE
     {
         elf.strtab
-            .get(symbol.st_name)
-            // If we get a symbol for the requested name, then continue only if the
-            // symbol name is valid UTF-8.
-            .and_then(std::result::Result::ok)
-            // Only consider non-empty names.
-            .filter(|name| !name.is_empty())
+            .get_at(symbol.st_name)
+            .filter(|name| !name.is_empty()) // Only consider non-empty names.
     } else {
         None
     }
@@ -223,12 +215,8 @@ fn dynamic_symbol_is_named_function<'t>(
     let st_type = symbol.st_type();
     if st_type == goblin::elf::sym::STT_FUNC || st_type == goblin::elf::sym::STT_GNU_IFUNC {
         elf.dynstrtab
-            .get(symbol.st_name)
-            // If we get a symbol for the requested name, then continue only if the
-            // symbol name is valid UTF-8.
-            .and_then(std::result::Result::ok)
-            // Only consider non-empty names.
-            .filter(|name| !name.is_empty())
+            .get_at(symbol.st_name)
+            .filter(|name| !name.is_empty()) // Only consider non-empty names.
     } else {
         None
     }
@@ -251,12 +239,8 @@ fn dynamic_symbol_is_named_imported_function<'t>(
         {
             return elf
                 .dynstrtab
-                .get(symbol.st_name)
-                // If we get a symbol for the requested name, then continue only if the
-                // symbol name is valid UTF-8.
-                .and_then(std::result::Result::ok)
-                // Only consider non-empty names.
-                .filter(|name| !name.is_empty());
+                .get_at(symbol.st_name)
+                .filter(|name| !name.is_empty()); // Only consider non-empty names.
         }
     }
     None
