@@ -1,3 +1,6 @@
+[![crates.io](https://img.shields.io/crates/v/binary-security-check.svg)](https://crates.io/crates/binary-security-check)
+[![license](https://img.shields.io/github/license/koutheir/binary-security-check?color=black)](https://raw.githubusercontent.com/koutheir/binary-security-check/master/LICENSE.txt)
+
 # Analyzer of security features in executable binaries
 
 `binary-security-check` is a command line utility that analyses executable
