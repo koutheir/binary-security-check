@@ -4,10 +4,11 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use std::{mem, ptr};
+use std::mem;
 
 use goblin::pe::section_table::{IMAGE_SCN_CNT_INITIALIZED_DATA, IMAGE_SCN_MEM_READ};
 use log::debug;
+use memoffset::offset_of;
 use scroll::Pread;
 
 use crate::errors::Result;
@@ -46,13 +47,6 @@ pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColo
         supports_address_space_layout_randomization,
         supports_safe_structured_exception_handling,
     ])
-}
-
-/// Returns the byte offset of a field in a structure.
-macro_rules! offset_of {
-    ($ty:ty, $field:ident) => {
-        unsafe { &(*ptr::null::<$ty>()).$field as *const _ as usize }
-    };
 }
 
 pub const IMAGE_DLLCHARACTERISTICS_NX_COMPAT: u16 = 0x0100;
