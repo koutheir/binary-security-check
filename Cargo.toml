@@ -6,7 +6,7 @@
 
 [package]
 name = "binary-security-check"
-version = "1.2.3"
+version = "1.2.4"
 authors = [ "Koutheir Attouchi <koutheir@gmail.com>" ]
 license = "MIT"
 description = "Analyzer of security features in executable binaries"
