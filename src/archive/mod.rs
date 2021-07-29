@@ -1,4 +1,4 @@
-// Copyright 2018 Koutheir Attouchi.
+// Copyright 2018-2021 Koutheir Attouchi.
 // See the "LICENSE.txt" file at the top-level directory of this distribution.
 //
 // Licensed under the the MIT license. This file may not be copied, modified,
