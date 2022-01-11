@@ -7,7 +7,7 @@
 [package]
 name = "binary-security-check"
 version = "1.2.4"
-authors = [ "Koutheir Attouchi <koutheir@gmail.com>" ]
+authors = ["Koutheir Attouchi <koutheir@gmail.com>"]
 license = "MIT"
 description = "Analyzer of security features in executable binaries"
 edition = "2021"
@@ -15,30 +15,26 @@ documentation = "https://docs.rs/binary-security-check"
 readme = "README.md"
 homepage = "https://github.com/koutheir/binary-security-check"
 repository = "https://github.com/koutheir/binary-security-check"
-categories = [
-    "command-line-utilities",
-    "development-tools",
-    "visualization",
-]
+categories = ["command-line-utilities", "development-tools", "visualization"]
 keywords = [
     "security",
     "aslr",
     "stack-overflow",
     "control-flow-guard",
     "fortify-source",
-    ]
+]
 
 # The release profile, used for `cargo build --release`.
 [profile.release]
-opt-level = 3
-debug = false
-rpath = false
-lto = true
+opt-level        = 3
+debug            = false
+rpath            = false
+lto              = true
 debug-assertions = false
-codegen-units = 1
-panic = 'unwind'
-incremental = false
-overflow-checks = true
+codegen-units    = 1
+panic            = 'unwind'
+incremental      = false
+overflow-checks  = true
 
 [dependencies]
 docopt       = { version = "1.1" }
@@ -49,9 +45,9 @@ log          = { version = "0.4" }
 memmap       = { version = "0.7" }
 rayon        = { version = "1.5" }
 regex        = { version = "1.5" }
-scroll       = { version = "0.10" }
+scroll       = { version = "0.11" }
 serde        = { version = "1.0" }
 serde_derive = { version = "1.0" }
-simplelog    = { version = "0.10" }
+simplelog    = { version = "0.11" }
 termcolor    = { version = "1.1" }
 memoffset    = { version = "0.6" }
