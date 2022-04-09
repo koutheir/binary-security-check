@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Koutheir Attouchi.
+# Copyright 2018-2022 Koutheir Attouchi.
 # See the "LICENSE.txt" file at the top-level directory of this distribution.
 #
 # Licensed under the the MIT license. This file may not be copied, modified,
@@ -6,7 +6,7 @@
 
 [package]
 name = "binary-security-check"
-version = "1.2.4"
+version = "1.2.5"
 authors = ["Koutheir Attouchi <koutheir@gmail.com>"]
 license = "MIT"
 description = "Analyzer of security features in executable binaries"
@@ -39,7 +39,7 @@ overflow-checks  = true
 [dependencies]
 docopt       = { version = "1.1" }
 thiserror    = { version = "1.0" }
-goblin       = { version = "0.4" }
+goblin       = { version = "0.5" }
 lazy_static  = { version = "1.4" }
 log          = { version = "0.4" }
 memmap       = { version = "0.7" }
