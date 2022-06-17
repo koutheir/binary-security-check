@@ -73,9 +73,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Enable multiarch support
-        run: sudo dpkg --add-architecture i386
-
       - name: Update packages data base
         run: sudo apt-get update --quiet
 
@@ -83,7 +80,7 @@ jobs:
         run: sudo apt-get upgrade --quiet --yes
 
       - name: Install C/C++ toolchains
-        run: sudo apt-get install --quiet --yes --no-install-recommends dialog clang lld mingw-w64 wine-stable wine64 wine32
+        run: sudo apt-get install --quiet --yes --no-install-recommends dialog clang lld mingw-w64 wine-stable wine64
 
       - name: Install rustc target
         run: rustup target add x86_64-pc-windows-gnu
