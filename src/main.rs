@@ -1,3 +1,4 @@
+#![doc = include_str!("../README.md")]
 #![allow(clippy::upper_case_acronyms, clippy::unnecessary_wraps)]
 
 // Copyright 2018-2021 Koutheir Attouchi.
