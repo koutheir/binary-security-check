@@ -62,7 +62,7 @@ pub const RDATA_CHARACTERISTICS: u32 = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SC
 pub const PDATA_CHARACTERISTICS: u32 = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Copy, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
 #[allow(non_snake_case)]
 pub struct ImageLoadConfigCodeIntegrity {
     Flags: u16,
@@ -72,7 +72,7 @@ pub struct ImageLoadConfigCodeIntegrity {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Copy, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
 #[allow(non_snake_case)]
 pub struct ImageLoadConfigDirectory32 {
     Size: u32,
@@ -119,7 +119,7 @@ pub struct ImageLoadConfigDirectory32 {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Copy, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
 #[allow(non_snake_case)]
 pub struct ImageLoadConfigDirectory64 {
     Size: u32,
