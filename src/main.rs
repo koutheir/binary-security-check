@@ -1,7 +1,7 @@
 #![doc = include_str!("../README.md")]
 #![allow(clippy::upper_case_acronyms, clippy::unnecessary_wraps)]
 
-// Copyright 2018-2021 Koutheir Attouchi.
+// Copyright 2018-2023 Koutheir Attouchi.
 // See the "LICENSE.txt" file at the top-level directory of this distribution.
 //
 // Licensed under the the MIT license. This file may not be copied, modified,
@@ -96,9 +96,9 @@ fn run<'args>() -> Result<(SuccessResults<'args>, ErrorResults<'args>)> {
 
 fn format_error(mut r: &dyn std::error::Error) -> String {
     // Format the error as a message.
-    let mut text = format!("{}.", r);
+    let mut text = format!("{r}.");
     while let Some(source) = r.source() {
-        text += &format!(" {}.", source);
+        text += &format!(" {source}.");
         r = source;
     }
     text

@@ -1,4 +1,4 @@
-// Copyright 2018-2021 Koutheir Attouchi.
+// Copyright 2018-2023 Koutheir Attouchi.
 // See the "LICENSE.txt" file at the top-level directory of this distribution.
 //
 // Licensed under the the MIT license. This file may not be copied, modified,
@@ -18,7 +18,7 @@ impl CheckedFunction {
 
     pub fn from_unchecked_name(unchecked_name: &str) -> Self {
         Self {
-            checked_name: format!("__{}_chk", unchecked_name),
+            checked_name: format!("__{unchecked_name}_chk"),
         }
     }
 

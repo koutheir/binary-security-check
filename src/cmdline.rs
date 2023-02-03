@@ -1,4 +1,4 @@
-// Copyright 2018-2021 Koutheir Attouchi.
+// Copyright 2018-2023 Koutheir Attouchi.
 // See the "LICENSE.txt" file at the top-level directory of this distribution.
 //
 // Licensed under the the MIT license. This file may not be copied, modified,
@@ -37,7 +37,7 @@ fn parse_command_line() -> Args {
         PKG_NAME, PKG_DESCRIPTION, PKG_VERSION, PKG_AUTHORS
     );
 
-    let version = format!("{} version {}", PKG_NAME, PKG_VERSION);
+    let version = format!("{PKG_NAME} version {PKG_VERSION}");
 
     Docopt::new(usage)
         .and_then(|d| d.help(true).version(Some(version)).deserialize())

@@ -1,4 +1,4 @@
-// Copyright 2018-2021 Koutheir Attouchi.
+// Copyright 2018-2023 Koutheir Attouchi.
 // See the "LICENSE.txt" file at the top-level directory of this distribution.
 //
 // Licensed under the the MIT license. This file may not be copied, modified,
@@ -75,7 +75,7 @@ impl NeededLibC {
             // For each known libc file location, parse the libc file.
             .map(|known_location| {
                 Self::open_elf_for_architecture(
-                    &Self::get_libc_path(known_location, &file_name),
+                    Self::get_libc_path(known_location, &file_name),
                     elf,
                 )
             })
@@ -121,7 +121,7 @@ impl NeededLibC {
             }
 
             goblin::Object::Unknown(magic) => Err(Error::UnsupportedBinaryFormat {
-                format: format!("Magic: 0x{:016X}", magic),
+                format: format!("Magic: 0x{magic:016X}"),
                 path: path.as_ref().into(),
             }),
 

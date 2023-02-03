@@ -1,4 +1,4 @@
-// Copyright 2018-2021 Koutheir Attouchi.
+// Copyright 2018-2023 Koutheir Attouchi.
 // See the "LICENSE.txt" file at the top-level directory of this distribution.
 //
 // Licensed under the the MIT license. This file may not be copied, modified,
@@ -100,7 +100,7 @@ impl DisplayInColorTerm for PEControlFlowGuardLevel {
                 )
             })?;
 
-        write!(wc, "{}CONTROL-FLOW-GUARD", marker)
+        write!(wc, "{marker}CONTROL-FLOW-GUARD")
             .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
         wc.reset().map_err(|r| {
             Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
@@ -155,7 +155,7 @@ impl DisplayInColorTerm for ASLRCompatibilityLevel {
                 )
             })?;
 
-        write!(wc, "{}{}", marker, text)
+        write!(wc, "{marker}{text}")
             .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
         wc.reset().map_err(|r| {
             Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
@@ -256,7 +256,7 @@ impl DisplayInColorTerm for Pin<Box<ELFFortifySourceStatus>> {
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(color)))
             .map_err(set_color_err)?;
 
-        write!(wc, "{}FORTIFY-SOURCE", marker)
+        write!(wc, "{marker}FORTIFY-SOURCE")
             .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
         wc.reset().map_err(|r| {
             Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
@@ -269,7 +269,7 @@ impl DisplayInColorTerm for Pin<Box<ELFFortifySourceStatus>> {
 
         let mut separator = "";
         for name in self.protected_functions.iter() {
-            write!(wc, "{}{}{}", separator, MARKER_GOOD, name)
+            write!(wc, "{separator}{MARKER_GOOD}{name}")
                 .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
             separator = ",";
         }
@@ -278,7 +278,7 @@ impl DisplayInColorTerm for Pin<Box<ELFFortifySourceStatus>> {
             .map_err(set_color_err)?;
 
         for name in self.unprotected_functions.iter() {
-            write!(wc, "{}{}{}", separator, MARKER_BAD, name)
+            write!(wc, "{separator}{MARKER_BAD}{name}")
                 .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
             separator = ",";
         }

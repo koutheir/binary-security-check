@@ -1,4 +1,4 @@
-# Copyright 2018-2022 Koutheir Attouchi.
+# Copyright 2018-2023 Koutheir Attouchi.
 # See the "LICENSE.txt" file at the top-level directory of this distribution.
 #
 # Licensed under the the MIT license. This file may not be copied, modified,
@@ -6,7 +6,7 @@
 
 [package]
 name = "binary-security-check"
-version = "1.2.8"
+version = "1.2.9"
 authors = ["Koutheir Attouchi <koutheir@gmail.com>"]
 license = "MIT"
 description = "Analyzer of security features in executable binaries"
@@ -50,4 +50,4 @@ serde        = { version = "1.0" }
 serde_derive = { version = "1.0" }
 simplelog    = { version = "0.12" }
 termcolor    = { version = "1.1" }
-memoffset    = { version = "0.7" }
+memoffset    = { version = "0.8" }
