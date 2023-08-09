@@ -53,7 +53,7 @@ impl NeededLibC {
     }
 
     pub fn find_needed_by_executable(elf: &goblin::elf::Elf) -> Result<Self> {
-        if let Some(ref path) = ARGS.flag_libc {
+        if let Some(path) = ARGS.flag_libc.as_ref() {
             Self::open_elf_for_architecture(path, elf)
         } else {
             elf.libraries
@@ -86,7 +86,7 @@ impl NeededLibC {
     }
 
     fn get_libc_path(location: impl AsRef<OsStr>, file_name: impl AsRef<Path>) -> PathBuf {
-        let mut path = if let Some(ref sysroot) = ARGS.flag_sysroot {
+        let mut path = if let Some(sysroot) = ARGS.flag_sysroot.as_ref() {
             let mut p = PathBuf::from(sysroot).into_os_string();
             p.push(location.as_ref());
             PathBuf::from(p)
@@ -105,7 +105,7 @@ impl NeededLibC {
         let parser = BinaryParser::open(&path)?;
 
         match parser.object() {
-            goblin::Object::Elf(ref elf) => {
+            goblin::Object::Elf(elf) => {
                 if elf.header.e_machine == other_elf.header.e_machine {
                     debug!(
                         "C runtime library file format is 'ELF'. Resolved to '{}'.",
@@ -166,16 +166,16 @@ impl NeededLibC {
         checked_functions
     }
 
-    pub fn exports_function<'t>(&'t self, checked_name: &str) -> Option<&'t str> {
+    pub fn exports_function<'this>(&'this self, checked_name: &str) -> Option<&'this str> {
         self.checked_functions
             .get(&CheckedFunction::from_checked_name(checked_name))
             .map(CheckedFunction::get_unchecked_name)
     }
 
-    pub fn exports_checked_version_of_function<'t>(
-        &'t self,
+    pub fn exports_checked_version_of_function<'this>(
+        &'this self,
         unchecked_name: &str,
-    ) -> Option<&'t str> {
+    ) -> Option<&'this str> {
         self.checked_functions
             .get(&CheckedFunction::from_unchecked_name(unchecked_name))
             .map(CheckedFunction::get_unchecked_name)

@@ -15,7 +15,7 @@ use crate::errors::{Error, Result};
 /// all cloned color buffers.
 pub struct ColorBuffer {
     buffer_writer: Arc<termcolor::BufferWriter>,
-    pub color_buffer: termcolor::Buffer,
+    pub(crate) color_buffer: termcolor::Buffer,
 }
 
 impl ColorBuffer {

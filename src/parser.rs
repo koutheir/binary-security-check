@@ -4,10 +4,11 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use std::marker::PhantomPinned;
+use core::marker::PhantomPinned;
+use core::pin::Pin;
+use core::ptr;
+use std::fs;
 use std::path::Path;
-use std::pin::Pin;
-use std::{fs, ptr};
 
 use log::debug;
 use memmap::{Mmap, MmapOptions};

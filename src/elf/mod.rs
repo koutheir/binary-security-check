@@ -25,10 +25,10 @@ use self::needed_libc::NeededLibC;
 
 pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
     let supports_address_space_layout_randomization =
-        AddressSpaceLayoutRandomizationOption::default().check(parser)?;
-    let has_stack_protection = ELFStackProtectionOption::default().check(parser)?;
-    let read_only_after_reloc = ELFReadOnlyAfterRelocationsOption::default().check(parser)?;
-    let immediate_bind = ELFImmediateBindingOption::default().check(parser)?;
+        AddressSpaceLayoutRandomizationOption.check(parser)?;
+    let has_stack_protection = ELFStackProtectionOption.check(parser)?;
+    let read_only_after_reloc = ELFReadOnlyAfterRelocationsOption.check(parser)?;
+    let immediate_bind = ELFImmediateBindingOption.check(parser)?;
     let fortify_source = ELFFortifySourceOption::new(ARGS.flag_libc_spec).check(parser)?;
 
     Ok(vec![
@@ -93,7 +93,7 @@ pub fn supports_aslr(elf: &goblin::elf::Elf) -> ASLRCompatibilityLevel {
                 {
                     // Position-independent executable.
                     debug!("Found type 'PT_PHDR' inside program headers section.");
-                } else if let Some(ref dynamic_section) = elf.dynamic {
+                } else if let Some(dynamic_section) = elf.dynamic.as_ref() {
                     let dynamic_section_flags_include_pie = dynamic_section.dyns.iter().any(|e| {
                         (e.d_tag == goblin::elf::dynamic::DT_FLAGS_1) && ((e.d_val & DF_1_PIE) != 0)
                     });
@@ -140,7 +140,7 @@ pub fn has_stack_protection(elf: &goblin::elf::Elf) -> bool {
         .dynsyms
         .iter()
         // Consider only named functions, and focus on their names.
-        .filter_map(|ref symbol| dynamic_symbol_is_named_function(elf, symbol))
+        .filter_map(|symbol| dynamic_symbol_is_named_function(elf, &symbol))
         // Check if any function name corresponds to '__stack_chk_fail'.
         .any(|name| name == "__stack_chk_fail");
 
@@ -159,10 +159,10 @@ const STV_DEFAULT: u8 = 0;
 /// Visible in other components but not preemptable.
 //const STV_PROTECTED: u8 = 3;
 
-pub fn dynamic_symbol_is_named_exported_function<'t>(
-    elf: &'t goblin::elf::Elf,
+pub fn dynamic_symbol_is_named_exported_function<'elf>(
+    elf: &'elf goblin::elf::Elf,
     symbol: &goblin::elf::sym::Sym,
-) -> Option<&'t str> {
+) -> Option<&'elf str> {
     // Visibility must be STV_DEFAULT.
     if symbol.st_other == STV_DEFAULT {
         // Type must be STT_FUNC or STT_GNU_IFUNC.
@@ -189,10 +189,10 @@ pub fn dynamic_symbol_is_named_exported_function<'t>(
 /// Position Independent Executable.
 pub const DF_1_PIE: u64 = 0x08_00_00_00;
 
-pub fn symbol_is_named_function_or_unspecified<'t>(
-    elf: &'t goblin::elf::Elf,
+pub fn symbol_is_named_function_or_unspecified<'elf>(
+    elf: &'elf goblin::elf::Elf,
     symbol: &goblin::elf::sym::Sym,
-) -> Option<&'t str> {
+) -> Option<&'elf str> {
     // Type must be STT_FUNC or STT_GNU_IFUNC or STT_NOTYPE.
     let st_type = symbol.st_type();
     if st_type == goblin::elf::sym::STT_FUNC
@@ -207,10 +207,10 @@ pub fn symbol_is_named_function_or_unspecified<'t>(
     }
 }
 
-fn dynamic_symbol_is_named_function<'t>(
-    elf: &'t goblin::elf::Elf,
+fn dynamic_symbol_is_named_function<'elf>(
+    elf: &'elf goblin::elf::Elf,
     symbol: &goblin::elf::sym::Sym,
-) -> Option<&'t str> {
+) -> Option<&'elf str> {
     // Type must be STT_FUNC or STT_GNU_IFUNC.
     let st_type = symbol.st_type();
     if st_type == goblin::elf::sym::STT_FUNC || st_type == goblin::elf::sym::STT_GNU_IFUNC {
@@ -222,10 +222,10 @@ fn dynamic_symbol_is_named_function<'t>(
     }
 }
 
-fn dynamic_symbol_is_named_imported_function<'t>(
-    elf: &'t goblin::elf::Elf,
+fn dynamic_symbol_is_named_imported_function<'elf>(
+    elf: &'elf goblin::elf::Elf,
     symbol: &goblin::elf::sym::Sym,
-) -> Option<&'t str> {
+) -> Option<&'elf str> {
     // Type must be STT_FUNC or STT_GNU_IFUNC.
     let st_type = symbol.st_type();
     if st_type == goblin::elf::sym::STT_FUNC || st_type == goblin::elf::sym::STT_GNU_IFUNC {

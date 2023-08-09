@@ -4,10 +4,10 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
+use core::marker::PhantomPinned;
+use core::pin::Pin;
+use core::ptr::NonNull;
 use std::collections::HashSet;
-use std::marker::PhantomPinned;
-use std::pin::Pin;
-use std::ptr::NonNull;
 
 use crate::elf;
 use crate::elf::needed_libc::NeededLibC;
@@ -84,7 +84,7 @@ pub enum PEControlFlowGuardLevel {
 
 impl DisplayInColorTerm for PEControlFlowGuardLevel {
     fn display_in_color_term(&self, wc: &mut dyn termcolor::WriteColor) -> Result<()> {
-        let (marker, color) = match self {
+        let (marker, color) = match *self {
             PEControlFlowGuardLevel::Unknown => (MARKER_UNKNOWN, COLOR_UNKNOWN),
             PEControlFlowGuardLevel::Unsupported => (MARKER_BAD, COLOR_BAD),
             PEControlFlowGuardLevel::Ineffective => (MARKER_MAYBE, COLOR_UNKNOWN),
@@ -130,7 +130,7 @@ pub enum ASLRCompatibilityLevel {
 
 impl DisplayInColorTerm for ASLRCompatibilityLevel {
     fn display_in_color_term(&self, wc: &mut dyn termcolor::WriteColor) -> Result<()> {
-        let (marker, color, text) = match self {
+        let (marker, color, text) = match *self {
             ASLRCompatibilityLevel::Unknown => (MARKER_UNKNOWN, COLOR_UNKNOWN, "ASLR"),
             ASLRCompatibilityLevel::Unsupported => (MARKER_BAD, COLOR_BAD, "ASLR"),
             ASLRCompatibilityLevel::Expensive => (MARKER_MAYBE, COLOR_UNKNOWN, "ASLR-EXPENSIVE"),
@@ -268,7 +268,7 @@ impl DisplayInColorTerm for Pin<Box<ELFFortifySourceStatus>> {
             .map_err(set_color_err)?;
 
         let mut separator = "";
-        for name in self.protected_functions.iter() {
+        for &name in &self.protected_functions {
             write!(wc, "{separator}{MARKER_GOOD}{name}")
                 .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
             separator = ",";
@@ -277,7 +277,7 @@ impl DisplayInColorTerm for Pin<Box<ELFFortifySourceStatus>> {
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(COLOR_BAD)))
             .map_err(set_color_err)?;
 
-        for name in self.unprotected_functions.iter() {
+        for &name in &self.unprotected_functions {
             write!(wc, "{separator}{MARKER_BAD}{name}")
                 .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
             separator = ",";

@@ -12,7 +12,7 @@ use crate::options::{BinarySecurityOption, ELFStackProtectionOption};
 use crate::parser::BinaryParser;
 
 pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
-    let has_stack_protection = ELFStackProtectionOption::default().check(parser)?;
+    let has_stack_protection = ELFStackProtectionOption.check(parser)?;
     Ok(vec![has_stack_protection])
 }
 
@@ -54,9 +54,7 @@ fn member_has_stack_protection(member_name: &str, bytes: &[u8]) -> Result<bool> 
         let r = elf
             .syms
             .iter()
-            .filter_map(|ref symbol| {
-                crate::elf::symbol_is_named_function_or_unspecified(&elf, symbol)
-            })
+            .filter_map(|symbol| crate::elf::symbol_is_named_function_or_unspecified(&elf, &symbol))
             .any(|name| name == "__stack_chk_fail" || name == "__stack_chk_fail_local");
 
         if r {

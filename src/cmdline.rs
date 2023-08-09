@@ -4,7 +4,7 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use std::fmt;
+use core::fmt;
 use std::path::PathBuf;
 
 use docopt::Docopt;
@@ -83,7 +83,7 @@ pub enum LibCSpec {
 
 impl fmt::Display for LibCSpec {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
+        match *self {
             LibCSpec::lsb1
             | LibCSpec::lsb1dot1
             | LibCSpec::lsb1dot2
@@ -99,7 +99,7 @@ impl fmt::Display for LibCSpec {
             | LibCSpec::lsb5 => write!(f, "Linux Standard Base ")?,
         }
 
-        match self {
+        match *self {
             LibCSpec::lsb1 => write!(f, "1.0.0"),
             LibCSpec::lsb1dot1 => write!(f, "1.1.0"),
             LibCSpec::lsb1dot2 => write!(f, "1.2.0"),

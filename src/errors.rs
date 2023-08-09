@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -42,25 +42,25 @@ pub enum Error {
     #[error("logging initialization failed")]
     LogInitialization(#[from] log::SetLoggerError),
 
-    #[error("Binary format of file '{0}' is not recognized")]
+    #[error("binary format of file '{0}' is not recognized")]
     UnknownBinaryFormat(PathBuf),
 
-    #[error("Binary format of '{name}' is not {expected}")]
+    #[error("binary format of '{name}' is not {expected}")]
     UnexpectedBinaryFormat {
         expected: &'static str,
         name: PathBuf,
     },
 
-    #[error("Architecture of '{0}' is unexpected")]
+    #[error("architecture of '{0}' is unexpected")]
     UnexpectedBinaryArchitecture(PathBuf),
 
-    #[error("Binary format '{format}' of file '{path}' is recognized but unsupported")]
+    #[error("binary format '{format}' of file '{path}' is recognized but unsupported")]
     UnsupportedBinaryFormat { format: String, path: PathBuf },
 
-    #[error("Dependent C runtime library is not recognized")]
+    #[error("dependent C runtime library is not recognized")]
     UnrecognizedNeededLibC,
 
-    #[error("Dependent C runtime library '{0}' was not found")]
+    #[error("dependent C runtime library '{0}' was not found")]
     NotFoundNeededLibC(PathBuf),
 }
 
@@ -70,10 +70,9 @@ impl Error {
         operation: &'static str,
         path: impl Into<PathBuf>,
     ) -> Self {
-        let path = path.into();
         Self::IO1 {
             operation,
-            path,
+            path: path.into(),
             source,
         }
     }

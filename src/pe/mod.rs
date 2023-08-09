@@ -4,7 +4,7 @@
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use std::mem;
+use core::mem;
 
 use goblin::pe::section_table::{IMAGE_SCN_CNT_INITIALIZED_DATA, IMAGE_SCN_MEM_READ};
 use log::debug;
@@ -22,19 +22,18 @@ use crate::options::{
 use crate::parser::BinaryParser;
 
 pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
-    let has_checksum = PEHasCheckSumOption::default().check(parser)?;
-    let supports_data_execution_prevention =
-        DataExecutionPreventionOption::default().check(parser)?;
-    let runs_only_in_app_container = PERunsOnlyInAppContainerOption::default().check(parser)?;
-    let enable_manifest_handling = PEEnableManifestHandlingOption::default().check(parser)?;
-    let requires_integrity_check = RequiresIntegrityCheckOption::default().check(parser)?;
-    let supports_control_flow_guard = PEControlFlowGuardOption::default().check(parser)?;
+    let has_checksum = PEHasCheckSumOption.check(parser)?;
+    let supports_data_execution_prevention = DataExecutionPreventionOption.check(parser)?;
+    let runs_only_in_app_container = PERunsOnlyInAppContainerOption.check(parser)?;
+    let enable_manifest_handling = PEEnableManifestHandlingOption.check(parser)?;
+    let requires_integrity_check = RequiresIntegrityCheckOption.check(parser)?;
+    let supports_control_flow_guard = PEControlFlowGuardOption.check(parser)?;
     let handles_addresses_larger_than_2_gigabytes =
-        PEHandlesAddressesLargerThan2GBOption::default().check(parser)?;
+        PEHandlesAddressesLargerThan2GBOption.check(parser)?;
     let supports_address_space_layout_randomization =
-        AddressSpaceLayoutRandomizationOption::default().check(parser)?;
+        AddressSpaceLayoutRandomizationOption.check(parser)?;
     let supports_safe_structured_exception_handling =
-        PESafeStructuredExceptionHandlingOption::default().check(parser)?;
+        PESafeStructuredExceptionHandlingOption.check(parser)?;
 
     Ok(vec![
         has_checksum,
@@ -94,7 +93,7 @@ pub struct ImageLoadConfigDirectory32 {
     EditList: u32,
     SecurityCookie: u32,
     SEHandlerTable: u32,
-    pub SEHandlerCount: u32,
+    pub(crate) SEHandlerCount: u32,
     GuardCFCheckFunctionPointer: u32,
     GuardCFDispatchFunctionPointer: u32,
     GuardCFFunctionTable: u32,
@@ -141,7 +140,7 @@ pub struct ImageLoadConfigDirectory64 {
     EditList: u64,
     SecurityCookie: u64,
     SEHandlerTable: u64,
-    pub SEHandlerCount: u64,
+    pub(crate) SEHandlerCount: u64,
     GuardCFCheckFunctionPointer: u64,
     GuardCFDispatchFunctionPointer: u64,
     GuardCFFunctionTable: u64,
@@ -288,12 +287,12 @@ pub fn supports_aslr(pe: &goblin::pe::PE) -> ASLRCompatibilityLevel {
     }
 }
 
-/// Returns information about support of Safe Structured Exception Handlers (SafeSEH).
+/// Returns information about support of Safe Structured Exception Handlers (`SafeSEH`).
 ///
-/// When SafeSEH is supported, the executable has a table of safe exception handlers. This table
+/// When `SafeSEH` is supported, the executable has a table of safe exception handlers. This table
 /// specifies for the operating system which exception handlers are valid for the image.
 ///
-/// SafeSEH is optional only on x86 targets. Other architectures, such as x64 and ARM, always
+/// `SafeSEH` is optional only on x86 targets. Other architectures, such as x64 and ARM, always
 /// store all exception handlers in the PDATA section.
 pub fn has_safe_structured_exception_handlers(parser: &BinaryParser, pe: &goblin::pe::PE) -> bool {
     match has_safe_seh_handlers(parser, pe) {
@@ -321,10 +320,10 @@ fn has_pdata_section(pe: &goblin::pe::PE) -> bool {
 }
 
 /// Returns `Some(true)` if the executable has an image load configuration directory, in which
-/// at least one SafeSEH handler is referenced.
+/// at least one `SafeSEH` handler is referenced.
 ///
 /// This returns `Some(false)` if the executable has an image load configuration directory,
-/// in which no SafeSEH handlers are referenced. It returns `None` in all other cases.
+/// in which no `SafeSEH` handlers are referenced. It returns `None` in all other cases.
 fn has_safe_seh_handlers(parser: &BinaryParser, pe: &goblin::pe::PE) -> Option<bool> {
     pe.header
         .optional_header
@@ -335,7 +334,9 @@ fn has_safe_seh_handlers(parser: &BinaryParser, pe: &goblin::pe::PE) -> Option<b
         .and_then(|load_config_table| {
             debug!("Reference to Image load configuration directory found in the executable.");
 
-            let load_config_table_end = load_config_table.virtual_address + load_config_table.size;
+            let load_config_table_end = load_config_table
+                .virtual_address
+                .saturating_add(load_config_table.size);
 
             pe.sections
                 .iter()
@@ -344,7 +345,7 @@ fn has_safe_seh_handlers(parser: &BinaryParser, pe: &goblin::pe::PE) -> Option<b
                     (section.characteristics & RDATA_CHARACTERISTICS) == RDATA_CHARACTERISTICS
                         && (load_config_table.virtual_address >= section.virtual_address)
                         && (load_config_table_end
-                            <= (section.virtual_address + section.virtual_size))
+                            <= section.virtual_address.saturating_add(section.virtual_size))
                 })
                 // We still need `load_config_table`, so carry it forward to the next steps.
                 .map(|section| (section, load_config_table))
@@ -384,11 +385,13 @@ fn image_load_configuration_directory_has_safe_seh_handlers(
     };
 
     // Convert virtual addresses into file offsets.
-    let config_table_offset_in_section =
-        load_config_table.virtual_address - section.virtual_address;
-    let config_table_offset_in_file =
-        (section.pointer_to_raw_data + config_table_offset_in_section) as usize;
-    let se_handler_count_offset_in_file = config_table_offset_in_file + offset_of_se_handler_count;
+    let config_table_offset_in_section = load_config_table
+        .virtual_address
+        .saturating_sub(section.virtual_address);
+    let config_table_offset_in_file = (section.pointer_to_raw_data as usize)
+        .saturating_add(config_table_offset_in_section as usize);
+    let se_handler_count_offset_in_file =
+        config_table_offset_in_file.saturating_add(offset_of_se_handler_count);
 
     parser
         .bytes()
@@ -398,7 +401,7 @@ fn image_load_configuration_directory_has_safe_seh_handlers(
         // safe structured exception handlers.
         .filter(|load_config_directory_size| {
             (*load_config_directory_size as usize)
-                >= (offset_of_se_handler_count + size_of_se_handler_count)
+                >= offset_of_se_handler_count.saturating_add(size_of_se_handler_count)
         })
         .and_then(|_load_config_directory_size| {
             debug!("Image load configuration directory defines 'SEHandlerCount'.");

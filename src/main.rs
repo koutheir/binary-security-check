@@ -1,11 +1,27 @@
-#![doc = include_str!("../README.md")]
-#![allow(clippy::upper_case_acronyms, clippy::unnecessary_wraps)]
-
 // Copyright 2018-2023 Koutheir Attouchi.
 // See the "LICENSE.txt" file at the top-level directory of this distribution.
 //
 // Licensed under the the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
+
+#![doc = include_str!("../README.md")]
+/*
+#![warn(clippy::all, clippy::pedantic, clippy::restriction)]
+#![allow(
+    clippy::upper_case_acronyms,
+    clippy::unnecessary_wraps,
+    clippy::missing_docs_in_private_items,
+    clippy::print_stderr,
+    clippy::print_stdout,
+    clippy::implicit_return,
+    clippy::separated_literal_suffix,
+    clippy::question_mark_used,
+    clippy::mod_module_files,
+    clippy::expect_used,
+    clippy::module_name_repetitions,
+    clippy::unwrap_in_result
+)]
+*/
 
 mod archive;
 mod cmdline;
@@ -16,9 +32,10 @@ mod parser;
 mod pe;
 mod ui;
 
+use core::iter;
 use std::io::Write;
-use std::iter;
 use std::path::{Path, PathBuf};
+use std::process::ExitCode;
 
 use log::{debug, error};
 use rayon::prelude::*;
@@ -28,14 +45,14 @@ use crate::errors::{Error, Result};
 use crate::parser::BinaryParser;
 use crate::ui::ColorBuffer;
 
-fn main() {
+fn main() -> ExitCode {
     lazy_static::initialize(&ARGS);
-    let _ignored = init_logging().or_else(|ref r| -> Result<()> {
-        eprintln!("Error: {}", format_error(r));
+    let _ignored = init_logging().or_else(|r| -> Result<()> {
+        eprintln!("Error: {}", format_error(&r));
         Ok(())
     });
 
-    let mut exit_code = 0;
+    let mut exit_code = 0_u8;
     match run() {
         Ok((successes, errors)) => {
             // Print successful results.
@@ -62,7 +79,7 @@ fn main() {
         }
     }
 
-    std::process::exit(exit_code)
+    ExitCode::from(exit_code)
 }
 
 type SuccessResults<'args> = Vec<(&'args PathBuf, ColorBuffer)>;
@@ -95,10 +112,12 @@ fn run<'args>() -> Result<(SuccessResults<'args>, ErrorResults<'args>)> {
 }
 
 fn format_error(mut r: &dyn std::error::Error) -> String {
+    use core::fmt::Write;
+
     // Format the error as a message.
     let mut text = format!("{r}.");
     while let Some(source) = r.source() {
-        text += &format!(" {source}.");
+        let _ignored = write!(&mut text, " {source}.");
         r = source;
     }
     text
@@ -134,17 +153,17 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
     let parser = BinaryParser::open(path.as_ref())?;
 
     let results = match parser.object() {
-        goblin::Object::Elf(ref _elf) => {
+        goblin::Object::Elf(_elf) => {
             debug!("Binary file format is 'ELF'.");
             elf::analyze_binary(&parser)
         }
 
-        goblin::Object::PE(ref _pe) => {
+        goblin::Object::PE(_pe) => {
             debug!("Binary file format is 'PE'.");
             pe::analyze_binary(&parser)
         }
 
-        goblin::Object::Mach(ref _mach) => {
+        goblin::Object::Mach(_mach) => {
             debug!("Binary file format is 'MACH'.");
             Err(Error::UnsupportedBinaryFormat {
                 format: "MACH".into(),
@@ -152,7 +171,7 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
             })
         }
 
-        goblin::Object::Archive(ref _archive) => {
+        goblin::Object::Archive(_archive) => {
             debug!("Binary file format is 'Archive'.");
             archive::analyze_binary(&parser)
         }

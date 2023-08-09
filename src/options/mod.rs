@@ -28,7 +28,7 @@ struct PEDllCharacteristicsBitOption {
 
 impl<'t> BinarySecurityOption<'t> for PEDllCharacteristicsBitOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
-        if let goblin::Object::PE(ref pe) = parser.object() {
+        if let goblin::Object::PE(pe) = parser.object() {
             if let Some(bit_is_set) =
                 pe::dll_characteristics_bit_is_set(pe, self.mask_name, self.mask)
             {
@@ -47,7 +47,7 @@ pub struct PEHasCheckSumOption;
 
 impl<'t> BinarySecurityOption<'t> for PEHasCheckSumOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
-        let r = if let goblin::Object::PE(ref pe) = parser.object() {
+        let r = if let goblin::Object::PE(pe) = parser.object() {
             pe::has_check_sum(pe)
         } else {
             None
@@ -88,9 +88,9 @@ impl<'t> BinarySecurityOption<'t> for DataExecutionPreventionOption {
 pub struct PERunsOnlyInAppContainerOption;
 
 impl<'t> BinarySecurityOption<'t> for PERunsOnlyInAppContainerOption {
-    /// Returns information about the requirement to run this executable inside AppContainer.
+    /// Returns information about the requirement to run this executable inside `AppContainer`.
     ///
-    /// This option indicates whether the executable must be run in the AppContainer
+    /// This option indicates whether the executable must be run in the `AppContainer`
     /// process-isolation environment, such as a Universal Windows Platform (UWP) or Windows
     /// Phone 8.x app.
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
@@ -153,7 +153,7 @@ pub struct PEControlFlowGuardOption;
 
 impl<'t> BinarySecurityOption<'t> for PEControlFlowGuardOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
-        let r = if let goblin::Object::PE(ref pe) = parser.object() {
+        let r = if let goblin::Object::PE(pe) = parser.object() {
             pe::supports_control_flow_guard(pe)
         } else {
             PEControlFlowGuardLevel::Unknown
@@ -167,7 +167,7 @@ pub struct PEHandlesAddressesLargerThan2GBOption;
 
 impl<'t> BinarySecurityOption<'t> for PEHandlesAddressesLargerThan2GBOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
-        let r = if let goblin::Object::PE(ref pe) = parser.object() {
+        let r = if let goblin::Object::PE(pe) = parser.object() {
             YesNoUnknownStatus::new(
                 "HANDLES-ADDR-GT-2GB",
                 pe::handles_addresses_larger_than_2_gigabytes(pe),
@@ -190,8 +190,8 @@ impl<'t> BinarySecurityOption<'t> for AddressSpaceLayoutRandomizationOption {
     /// stacks, and other operating system allocations.
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
         match parser.object() {
-            goblin::Object::PE(ref pe) => Ok(Box::new(pe::supports_aslr(pe))),
-            goblin::Object::Elf(ref elf_obj) => Ok(Box::new(elf::supports_aslr(elf_obj))),
+            goblin::Object::PE(pe) => Ok(Box::new(pe::supports_aslr(pe))),
+            goblin::Object::Elf(elf_obj) => Ok(Box::new(elf::supports_aslr(elf_obj))),
             _ => Ok(Box::new(YesNoUnknownStatus::unknown("ASLR"))),
         }
     }
@@ -202,7 +202,7 @@ pub struct PESafeStructuredExceptionHandlingOption;
 
 impl<'t> BinarySecurityOption<'t> for PESafeStructuredExceptionHandlingOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
-        let r = if let goblin::Object::PE(ref pe) = parser.object() {
+        let r = if let goblin::Object::PE(pe) = parser.object() {
             YesNoUnknownStatus::new(
                 "SAFE-SEH",
                 pe::has_safe_structured_exception_handlers(parser, pe),
@@ -219,7 +219,7 @@ pub struct ELFReadOnlyAfterRelocationsOption;
 
 impl<'t> BinarySecurityOption<'t> for ELFReadOnlyAfterRelocationsOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
-        let r = if let goblin::Object::Elf(ref elf) = parser.object() {
+        let r = if let goblin::Object::Elf(elf) = parser.object() {
             YesNoUnknownStatus::new(
                 "READ-ONLY-RELOC",
                 elf::becomes_read_only_after_relocations(elf),
@@ -237,11 +237,11 @@ pub struct ELFStackProtectionOption;
 impl<'t> BinarySecurityOption<'t> for ELFStackProtectionOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
         let r = match parser.object() {
-            goblin::Object::Elf(ref elf_obj) => {
+            goblin::Object::Elf(elf_obj) => {
                 YesNoUnknownStatus::new("STACK-PROT", elf::has_stack_protection(elf_obj))
             }
 
-            goblin::Object::Archive(ref archive) => {
+            goblin::Object::Archive(archive) => {
                 let r = archive::has_stack_protection(parser, archive)?;
                 YesNoUnknownStatus::new("STACK-PROT", r)
             }
@@ -257,7 +257,7 @@ pub struct ELFImmediateBindingOption;
 
 impl<'t> BinarySecurityOption<'t> for ELFImmediateBindingOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
-        let r = if let goblin::Object::Elf(ref elf) = parser.object() {
+        let r = if let goblin::Object::Elf(elf) = parser.object() {
             YesNoUnknownStatus::new("IMMEDIATE-BIND", elf::requires_immediate_binding(elf))
         } else {
             YesNoUnknownStatus::unknown("IMMEDIATE-BIND")
@@ -278,7 +278,7 @@ impl ELFFortifySourceOption {
 
 impl<'t> BinarySecurityOption<'t> for ELFFortifySourceOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
-        if let goblin::Object::Elf(ref elf) = parser.object() {
+        if let goblin::Object::Elf(elf) = parser.object() {
             let libc = if let Some(spec) = self.libc_spec {
                 NeededLibC::from_spec(spec)
             } else {
