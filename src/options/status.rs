@@ -179,6 +179,7 @@ impl ELFFortifySourceStatus {
             _pin: PhantomPinned,
         });
 
+        // SAFETY:
         // `result` is now allocated, initialized and pinned on the heap.
         // Its location is therefore stable, and we can store references to it
         // in other places.

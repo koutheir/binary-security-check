@@ -5,8 +5,9 @@
 // or distributed except according to those terms.
 
 #![doc = include_str!("../README.md")]
-/*
-#![warn(clippy::all, clippy::pedantic, clippy::restriction)]
+#![warn(unsafe_op_in_unsafe_fn)]
+#![warn(clippy::all, clippy::pedantic)]
+//#![warn(clippy::restriction)]
 #![allow(
     clippy::upper_case_acronyms,
     clippy::unnecessary_wraps,
@@ -19,9 +20,12 @@
     clippy::mod_module_files,
     clippy::expect_used,
     clippy::module_name_repetitions,
-    clippy::unwrap_in_result
+    clippy::unwrap_in_result,
+    clippy::min_ident_chars,
+    clippy::single_char_lifetime_names,
+    clippy::single_call_fn,
+    clippy::absolute_paths
 )]
-*/
 
 mod archive;
 mod cmdline;
@@ -86,6 +90,8 @@ type SuccessResults<'args> = Vec<(&'args PathBuf, ColorBuffer)>;
 type ErrorResults<'args> = Vec<(&'args PathBuf, Error)>;
 
 fn run<'args>() -> Result<(SuccessResults<'args>, ErrorResults<'args>)> {
+    use rayon::iter::Either;
+
     let icb_stdout = ColorBuffer::for_stdout();
 
     let result: (Vec<_>, Vec<_>) = ARGS
@@ -103,9 +109,9 @@ fn run<'args>() -> Result<(SuccessResults<'args>, ErrorResults<'args>)> {
         })
         .partition_map(|(path, out, result)| match result {
             // On success, retain the path and output buffer, discard the result.
-            Ok(_) => ::rayon::iter::Either::Left((path, out)),
+            Ok(()) => Either::Left((path, out)),
             // On error, retain the path and error, discard the output buffer.
-            Err(r) => ::rayon::iter::Either::Right((path, r)),
+            Err(r) => Either::Right((path, r)),
         });
 
     Ok(result)
@@ -150,20 +156,22 @@ fn init_logging() -> Result<()> {
 }
 
 fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -> Result<()> {
+    use goblin::Object;
+
     let parser = BinaryParser::open(path.as_ref())?;
 
     let results = match parser.object() {
-        goblin::Object::Elf(_elf) => {
+        Object::Elf(_elf) => {
             debug!("Binary file format is 'ELF'.");
             elf::analyze_binary(&parser)
         }
 
-        goblin::Object::PE(_pe) => {
+        Object::PE(_pe) => {
             debug!("Binary file format is 'PE'.");
             pe::analyze_binary(&parser)
         }
 
-        goblin::Object::Mach(_mach) => {
+        Object::Mach(_mach) => {
             debug!("Binary file format is 'MACH'.");
             Err(Error::UnsupportedBinaryFormat {
                 format: "MACH".into(),
@@ -171,12 +179,14 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
             })
         }
 
-        goblin::Object::Archive(_archive) => {
+        Object::Archive(_archive) => {
             debug!("Binary file format is 'Archive'.");
             archive::analyze_binary(&parser)
         }
 
-        goblin::Object::Unknown(_magic) => Err(Error::UnknownBinaryFormat(path.as_ref().into())),
+        Object::Unknown(_magic) => Err(Error::UnknownBinaryFormat(path.as_ref().into())),
+
+        _ => Err(Error::UnknownBinaryFormat(path.as_ref().into())),
     }?;
 
     // Print results in the color buffer.

@@ -6,7 +6,7 @@
 
 [package]
 name = "binary-security-check"
-version = "1.2.11"
+version = "1.2.12"
 authors = ["Koutheir Attouchi <koutheir@gmail.com>"]
 license = "MIT"
 description = "Analyzer of security features in executable binaries"
@@ -39,13 +39,13 @@ overflow-checks  = true
 [dependencies]
 docopt       = { version = "1.1" }
 thiserror    = { version = "1.0" }
-goblin       = { version = "0.7" }
+goblin       = { version = "0.8" }
 lazy_static  = { version = "1.4" }
 log          = { version = "0.4" }
 memmap       = { version = "0.7" }
-rayon        = { version = "1.7" }
-regex        = { version = "1.9" }
-scroll       = { version = "0.11" }
+rayon        = { version = "1.8" }
+regex        = { version = "1.10" }
+scroll       = { version = "0.12" }
 serde        = { version = "1.0" }
 serde_derive = { version = "1.0" }
 simplelog    = { version = "0.12" }

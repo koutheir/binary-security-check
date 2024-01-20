@@ -125,9 +125,16 @@ impl NeededLibC {
                 path: path.as_ref().into(),
             }),
 
-            _ => Err(Error::UnexpectedBinaryFormat {
-                expected: "ELF",
-                name: path.as_ref().into(),
+            goblin::Object::PE(_) | goblin::Object::Mach(_) | goblin::Object::Archive(_) => {
+                Err(Error::UnexpectedBinaryFormat {
+                    expected: "ELF",
+                    name: path.as_ref().into(),
+                })
+            }
+
+            _ => Err(Error::UnsupportedBinaryFormat {
+                format: "Unknown".into(),
+                path: path.as_ref().into(),
             }),
         }
     }
@@ -197,7 +204,7 @@ lazy_static::lazy_static! {
 }
 
 fn init_known_libc_pattern() -> Regex {
-    RegexBuilder::new(r#"\blib(c|bionic)\b[^/]+$"#)
+    RegexBuilder::new(r"\blib(c|bionic)\b[^/]+$")
         .case_insensitive(true)
         .multi_line(false)
         .dot_matches_new_line(false)

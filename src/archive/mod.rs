@@ -41,12 +41,14 @@ pub fn has_stack_protection(
 /// - [`__stack_chk_fail`](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/baselib---stack-chk-fail-1.html).
 /// - `__stack_chk_fail_local` is present in `libc` when it is stack-protected.
 fn member_has_stack_protection(member_name: &str, bytes: &[u8]) -> Result<bool> {
-    let obj = goblin::Object::parse(bytes).map_err(|source| Error::Goblin {
+    use goblin::Object;
+
+    let obj = Object::parse(bytes).map_err(|source| Error::Goblin {
         operation: "goblin::Object::parse",
         source,
     })?;
 
-    if let goblin::Object::Elf(elf) = obj {
+    if let Object::Elf(elf) = obj {
         // elf.is_object_file()
         debug!("Format of archive member '{}' is 'ELF'.", member_name);
         // `r` is `true` if any named function or an unspecified-type symbol is

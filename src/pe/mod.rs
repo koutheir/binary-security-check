@@ -328,7 +328,12 @@ fn has_safe_seh_handlers(parser: &BinaryParser, pe: &goblin::pe::PE) -> Option<b
     pe.header
         .optional_header
         // If we actually have an optional header, get its load configuration table.
-        .and_then(|optional_header| *optional_header.data_directories.get_load_config_table())
+        .and_then(|optional_header| {
+            optional_header
+                .data_directories
+                .get_load_config_table()
+                .copied()
+        })
         // Continue only if the load configuration table has some bytes.
         .filter(|load_config_table| load_config_table.size > 0)
         .and_then(|load_config_table| {
@@ -341,7 +346,7 @@ fn has_safe_seh_handlers(parser: &BinaryParser, pe: &goblin::pe::PE) -> Option<b
             pe.sections
                 .iter()
                 // Find the `.rdata` section that has the bytes of this load configuration table.
-                .find(|section| {
+                .find(|&section| {
                     (section.characteristics & RDATA_CHARACTERISTICS) == RDATA_CHARACTERISTICS
                         && (load_config_table.virtual_address >= section.virtual_address)
                         && (load_config_table_end
