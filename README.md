@@ -87,29 +87,37 @@ The status of the security feature in the binary is indicated by a letter before
 
 For example, `!ASLR` means the binary does not support Address Space Layout Randomization.
 
-## Command line
+## Usage
 
 ```
-Usage:
-  binary-security-check [-v] [-c COLOR] [(-s DIR | -l FILE | -i SPEC | -n)] <file>...
-  binary-security-check (-h | --help)
-  binary-security-check --version
+Usage: binary-security-check [OPTIONS] <INPUT_FILES>...
+
+Arguments:
+  <INPUT_FILES>...
+          Binary files to analyze
 
 Options:
-  -c COLOR, --color=COLOR  Use color in standard output. Either 'auto' or
-                 'always' or 'never' [default: auto].
-  -s DIR, --sysroot=DIR  Set system root for finding the corresponding
-                 C runtime library.
-  -l FILE, --libc=FILE  Set the path of the C runtime library.
-  -i SPEC, --libc-spec=SPEC  Use an internal list of checked functions as
-                 specified by a specification.
-  -n, --no-libc  Assume that input files do not use any C runtime libraries.
-  -v, --verbose  Verbose logging.
-  -h, --help     Show this screen.
-  --version      Show version.
+  -v, --verbose
+          Verbose logging
+  -c, --color <COLOR>
+          Use color in standard output [default: auto] [possible values: auto, always, never]
+  -l, --libc <LIBC>
+          Path of the C runtime library file
+  -s, --sysroot <SYSROOT>
+          Path of the system root for finding the corresponding C runtime library
+  -i, --libc-spec <LIBC_SPEC>
+          Use an internal list of checked functions as specified by a specification
+          [possible values: lsb1, lsb1dot1, lsb1dot2, lsb1dot3, lsb2, lsb2dot0dot1, lsb2dot1, lsb3,
+          lsb3dot1, lsb3dot2, lsb4, lsb4dot1, lsb5]
+  -n, --no-libc
+          Assume that input files do not use any C runtime libraries
+  -h, --help
+          Print help
+  -V, --version
+          Print version
 
-If specified, then SPEC can be one of the following versions of the Linux
-Standard Base specifications:
+If --libc-spec is specified, then its value can be one of the following versions
+of the Linux Standard Base specifications:
 - lsb1: LSB 1.0.0.
 - lsb1dot1: LSB 1.1.0.
 - lsb1dot2: LSB 1.2.0.
@@ -132,7 +140,8 @@ following directories:
 - /usr/lib64/
 - /lib32/
 - /usr/lib32/
-The tools `readelf` and `ldd` can be used to help find the path of the C library
+
+The tools "readelf" and "ldd" can be used to help find the path of the C library
 needed by the analyzed files, which is given by the --libc parameter.
 ```
 

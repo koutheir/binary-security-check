@@ -11,7 +11,6 @@ use std::collections::HashSet;
 
 use log::{debug, log_enabled, warn};
 
-use crate::cmdline::ARGS;
 use crate::errors::Result;
 use crate::options::status::{ASLRCompatibilityLevel, DisplayInColorTerm};
 use crate::options::{
@@ -23,12 +22,15 @@ use crate::parser::BinaryParser;
 use self::checked_functions::function_is_checked_version;
 use self::needed_libc::NeededLibC;
 
-pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
+pub(crate) fn analyze_binary(
+    parser: &BinaryParser,
+    options: &crate::cmdline::Options,
+) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
     let supports_address_space_layout_randomization =
-        AddressSpaceLayoutRandomizationOption.check(parser)?;
-    let has_stack_protection = ELFStackProtectionOption.check(parser)?;
-    let read_only_after_reloc = ELFReadOnlyAfterRelocationsOption.check(parser)?;
-    let immediate_bind = ELFImmediateBindingOption.check(parser)?;
+        AddressSpaceLayoutRandomizationOption.check(parser, options)?;
+    let has_stack_protection = ELFStackProtectionOption.check(parser, options)?;
+    let read_only_after_reloc = ELFReadOnlyAfterRelocationsOption.check(parser, options)?;
+    let immediate_bind = ELFImmediateBindingOption.check(parser, options)?;
 
     let mut result = vec![
         supports_address_space_layout_randomization,
@@ -37,8 +39,9 @@ pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColo
         immediate_bind,
     ];
 
-    if !ARGS.flag_no_libc {
-        let fortify_source = ELFFortifySourceOption::new(ARGS.flag_libc_spec).check(parser)?;
+    if !options.no_libc {
+        let fortify_source =
+            ELFFortifySourceOption::new(options.libc_spec).check(parser, options)?;
         result.push(fortify_source);
     }
 

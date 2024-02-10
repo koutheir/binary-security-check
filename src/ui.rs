@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use crate::cmdline::ARGS;
+use crate::cmdline::UseColor;
 use crate::errors::{Error, Result};
 
 /// A color buffer that can should be written-to from a single thread.
@@ -19,9 +19,8 @@ pub(crate) struct ColorBuffer {
 }
 
 impl ColorBuffer {
-    pub fn for_stdout() -> Self {
-        let buffer_writer =
-            termcolor::BufferWriter::stdout(termcolor::ColorChoice::from(ARGS.flag_color));
+    pub(crate) fn for_stdout(use_color: UseColor) -> Self {
+        let buffer_writer = termcolor::BufferWriter::stdout(use_color.into());
         let color_buffer = buffer_writer.buffer();
 
         Self {
@@ -30,14 +29,10 @@ impl ColorBuffer {
         }
     }
 
-    pub fn print(&self) -> Result<()> {
-        self.buffer_writer.print(&self.color_buffer).map_err(|r| {
-            Error::from_io1(
-                r,
-                "termcolor::BufferWriter::print",
-                "standard output stream",
-            )
-        })?;
+    pub(crate) fn print(&self) -> Result<()> {
+        self.buffer_writer
+            .print(&self.color_buffer)
+            .map_err(|r| Error::from_io1(r, "print", "standard output stream"))?;
         Ok(())
     }
 }

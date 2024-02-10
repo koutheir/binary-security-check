@@ -53,19 +53,12 @@ impl DisplayInColorTerm for YesNoUnknownStatus {
         };
 
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(color)))
-            .map_err(|r| {
-                Error::from_io1(
-                    r,
-                    "termcolor::WriteColor::set_color",
-                    "standard output stream",
-                )
-            })?;
+            .map_err(|r| Error::from_io1(r, "set color", "standard output stream"))?;
 
         write!(wc, "{}{}", marker, self.name)
             .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
-        wc.reset().map_err(|r| {
-            Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
-        })
+        wc.reset()
+            .map_err(|r| Error::from_io1(r, "reset", "standard output stream"))
     }
 }
 
@@ -92,19 +85,12 @@ impl DisplayInColorTerm for PEControlFlowGuardLevel {
         };
 
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(color)))
-            .map_err(|r| {
-                Error::from_io1(
-                    r,
-                    "termcolor::WriteColor::set_color",
-                    "standard output stream",
-                )
-            })?;
+            .map_err(|r| Error::from_io1(r, "set color", "standard output stream"))?;
 
         write!(wc, "{marker}CONTROL-FLOW-GUARD")
             .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
-        wc.reset().map_err(|r| {
-            Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
-        })
+        wc.reset()
+            .map_err(|r| Error::from_io1(r, "reset", "standard output stream"))
     }
 }
 
@@ -147,19 +133,12 @@ impl DisplayInColorTerm for ASLRCompatibilityLevel {
         };
 
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(color)))
-            .map_err(|r| {
-                Error::from_io1(
-                    r,
-                    "termcolor::WriteColor::set_color",
-                    "standard output stream",
-                )
-            })?;
+            .map_err(|r| Error::from_io1(r, "set color", "standard output stream"))?;
 
         write!(wc, "{marker}{text}")
             .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
-        wc.reset().map_err(|r| {
-            Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
-        })
+        wc.reset()
+            .map_err(|r| Error::from_io1(r, "reset", "standard output stream"))
     }
 }
 
@@ -246,22 +225,15 @@ impl DisplayInColorTerm for Pin<Box<ELFFortifySourceStatus>> {
             (false, false) => (MARKER_MAYBE, COLOR_UNKNOWN),
         };
 
-        let set_color_err = |r| {
-            Error::from_io1(
-                r,
-                "termcolor::WriteColor::set_color",
-                "standard output stream",
-            )
-        };
+        let set_color_err = |r| Error::from_io1(r, "set color", "standard output stream");
 
         wc.set_color(termcolor::ColorSpec::new().set_fg(Some(color)))
             .map_err(set_color_err)?;
 
         write!(wc, "{marker}FORTIFY-SOURCE")
             .map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
-        wc.reset().map_err(|r| {
-            Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
-        })?;
+        wc.reset()
+            .map_err(|r| Error::from_io1(r, "reset", "standard output stream"))?;
 
         write!(wc, "(").map_err(|r| Error::from_io1(r, "write", "standard output stream"))?;
 
@@ -284,10 +256,10 @@ impl DisplayInColorTerm for Pin<Box<ELFFortifySourceStatus>> {
             separator = ",";
         }
 
-        wc.reset().map_err(|r| {
-            Error::from_io1(r, "termcolor::WriteColor::reset", "standard output stream")
-        })?;
-        writeln!(wc, ")").map_err(|r| Error::from_io1(r, "writeln", "standard output stream"))?;
+        wc.reset()
+            .map_err(|r| Error::from_io1(r, "reset", "standard output stream"))?;
+        writeln!(wc, ")")
+            .map_err(|r| Error::from_io1(r, "write line", "standard output stream"))?;
         Ok(())
     }
 }

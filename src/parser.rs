@@ -11,7 +11,7 @@ use std::fs;
 use std::path::Path;
 
 use log::debug;
-use memmap::{Mmap, MmapOptions};
+use memmap2::{Mmap, MmapOptions};
 
 use crate::errors::{Error, Result};
 
@@ -22,14 +22,14 @@ pub(crate) struct BinaryParser {
 }
 
 impl BinaryParser {
-    pub fn open(path: impl AsRef<Path>) -> Result<Pin<Box<Self>>> {
+    pub(crate) fn open(path: impl AsRef<Path>) -> Result<Pin<Box<Self>>> {
         debug!("Opening binary file '{}'.", path.as_ref().display());
-        let file = fs::File::open(&path)
-            .map_err(|r| Error::from_io1(r, "std::fs::File::open", path.as_ref()))?;
+        let file =
+            fs::File::open(&path).map_err(|r| Error::from_io1(r, "open file", path.as_ref()))?;
 
         debug!("Mapping binary file '{}'.", path.as_ref().display());
         let bytes = unsafe { MmapOptions::new().map(&file) }
-            .map_err(|r| Error::from_io1(r, "memmap::MmapOptions::map", path.as_ref()))?;
+            .map_err(|r| Error::from_io1(r, "map file", path.as_ref()))?;
 
         let mut result = Box::pin(Self {
             bytes,
@@ -52,10 +52,8 @@ impl BinaryParser {
             unsafe { ptr::NonNull::from(&result.bytes).as_ptr().as_ref().unwrap() };
 
         debug!("Parsing binary file '{}'.", path.as_ref().display());
-        let object = goblin::Object::parse(bytes_ref).map_err(|source| Error::Goblin {
-            operation: "goblin::Object::parse",
-            source,
-        })?;
+        let object =
+            goblin::Object::parse(bytes_ref).map_err(|source| Error::ParseFile { source })?;
 
         result.as_mut().set_object(Some(object));
         Ok(result)

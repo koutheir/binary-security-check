@@ -10,7 +10,7 @@ pub(crate) type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum Error {
-    #[error("{operation}({path}) failed")]
+    #[error("failed to {operation}. Path: {path}")]
     IO1 {
         operation: &'static str,
         path: PathBuf,
@@ -20,19 +20,17 @@ pub(crate) enum Error {
         //backtrace: Backtrace,
     },
 
-    #[error("{operation}() failed")]
-    Goblin {
-        operation: &'static str,
+    #[error("failed to parse file")]
+    ParseFile {
         #[source]
         source: goblin::error::Error,
         // Add this when `Backtrace` becomes stable.
         //backtrace: Backtrace,
     },
 
-    #[error("{operation}({param1}) failed")]
-    Goblin1 {
-        operation: &'static str,
-        param1: String,
+    #[error("failed to extract archive member: {member}")]
+    ExtractArchiveMember {
+        member: String,
         #[source]
         source: goblin::error::Error,
         // Add this when `Backtrace` becomes stable.

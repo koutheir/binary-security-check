@@ -41,23 +41,32 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use log::{debug, error};
+use clap::Parser;
+use flexi_logger::{FlexiLoggerError, LoggerHandle};
+use log::{debug, error, trace};
 use rayon::prelude::*;
 
-use crate::cmdline::{UseColor, ARGS};
+use crate::cmdline::UseColor;
 use crate::errors::{Error, Result};
 use crate::parser::BinaryParser;
 use crate::ui::ColorBuffer;
 
 fn main() -> ExitCode {
-    lazy_static::initialize(&ARGS);
-    let _ignored = init_logging().or_else(|r| -> Result<()> {
-        eprintln!("Error: {}", format_error(&r));
-        Ok(())
-    });
+    let options = cmdline::Options::parse();
+
+    let _log_handle = match init_logger(&options) {
+        Ok(h) => h,
+
+        Err(err) => {
+            eprintln!("Error: {}", format_error(&err));
+            return ExitCode::FAILURE;
+        }
+    };
+
+    trace!("{:?}", &options);
 
     let mut exit_code = 0_u8;
-    match run() {
+    match run(options) {
         Ok((successes, errors)) => {
             // Print successful results.
             for (path, color_buffer) in successes {
@@ -86,17 +95,18 @@ fn main() -> ExitCode {
     ExitCode::from(exit_code)
 }
 
-type SuccessResults<'args> = Vec<(&'args PathBuf, ColorBuffer)>;
-type ErrorResults<'args> = Vec<(&'args PathBuf, Error)>;
+type SuccessResults = Vec<(PathBuf, ColorBuffer)>;
+type ErrorResults = Vec<(PathBuf, Error)>;
 
-fn run<'args>() -> Result<(SuccessResults<'args>, ErrorResults<'args>)> {
+fn run(mut options: cmdline::Options) -> Result<(SuccessResults, ErrorResults)> {
     use rayon::iter::Either;
 
-    let icb_stdout = ColorBuffer::for_stdout();
+    let icb_stdout = ColorBuffer::for_stdout(options.color);
 
-    let result: (Vec<_>, Vec<_>) = ARGS
-        .arg_file
-        .iter()
+    let input_files = core::mem::take(&mut options.input_files);
+
+    let result: (Vec<_>, Vec<_>) = input_files
+        .into_iter()
         // Zip one color buffer with each file to process.
         .zip(iter::repeat(icb_stdout))
         // Collect all inputs before starting processing.
@@ -104,7 +114,7 @@ fn run<'args>() -> Result<(SuccessResults<'args>, ErrorResults<'args>)> {
         .into_par_iter()
         // Process each file.
         .map(|(path, mut out)| {
-            let r = process_file(path, &mut out.color_buffer);
+            let r = process_file(&path, &mut out.color_buffer, &options);
             (path, out, r)
         })
         .partition_map(|(path, out, result)| match result {
@@ -129,33 +139,34 @@ fn format_error(mut r: &dyn std::error::Error) -> String {
     text
 }
 
-fn init_logging() -> Result<()> {
-    use simplelog::{ColorChoice, Config, LevelFilter, SimpleLogger, TermLogger, TerminalMode};
-
-    let log_level = if ARGS.flag_verbose {
-        LevelFilter::Debug
-    } else {
-        LevelFilter::Info
+fn init_logger(options: &cmdline::Options) -> std::result::Result<LoggerHandle, FlexiLoggerError> {
+    use flexi_logger::{
+        colored_default_format, default_format, AdaptiveFormat, LogSpecification, Logger,
     };
 
-    let log_config = Config::default();
+    let log_spec = LogSpecification::builder()
+        .default(if options.verbose {
+            log::LevelFilter::Trace
+        } else {
+            log::LevelFilter::Info
+        })
+        .build();
 
-    match ARGS.flag_color {
-        UseColor::never => SimpleLogger::init(log_level, log_config)?,
+    let logger = Logger::with(log_spec).use_utc();
+    let logger = match options.color {
+        UseColor::Auto => logger.adaptive_format_for_stderr(AdaptiveFormat::Default),
+        UseColor::Always => logger.format_for_stderr(colored_default_format),
+        UseColor::Never => logger.format_for_stderr(default_format),
+    };
 
-        UseColor::auto | UseColor::always => TermLogger::init(
-            log_level,
-            log_config,
-            TerminalMode::Stderr,
-            ColorChoice::Auto,
-        )?,
-    }
-
-    debug!("{:?}", *ARGS);
-    Ok(())
+    logger.start()
 }
 
-fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -> Result<()> {
+fn process_file(
+    path: &impl AsRef<Path>,
+    color_buffer: &mut termcolor::Buffer,
+    options: &cmdline::Options,
+) -> Result<()> {
     use goblin::Object;
 
     let parser = BinaryParser::open(path.as_ref())?;
@@ -163,12 +174,12 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
     let results = match parser.object() {
         Object::Elf(_elf) => {
             debug!("Binary file format is 'ELF'.");
-            elf::analyze_binary(&parser)
+            elf::analyze_binary(&parser, options)
         }
 
         Object::PE(_pe) => {
             debug!("Binary file format is 'PE'.");
-            pe::analyze_binary(&parser)
+            pe::analyze_binary(&parser, options)
         }
 
         Object::Mach(_mach) => {
@@ -181,7 +192,7 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
 
         Object::Archive(_archive) => {
             debug!("Binary file format is 'Archive'.");
-            archive::analyze_binary(&parser)
+            archive::analyze_binary(&parser, options)
         }
 
         Object::Unknown(_magic) => Err(Error::UnknownBinaryFormat(path.as_ref().into())),
@@ -200,6 +211,7 @@ fn process_file(path: &impl AsRef<Path>, color_buffer: &mut termcolor::Buffer) -
         }
     }
 
-    writeln!(color_buffer).map_err(|r| Error::from_io1(r, "writeln", "standard output stream"))?;
+    writeln!(color_buffer)
+        .map_err(|r| Error::from_io1(r, "write line", "standard output stream"))?;
     Ok(())
 }

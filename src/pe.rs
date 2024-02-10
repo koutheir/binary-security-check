@@ -21,19 +21,23 @@ use crate::options::{
 };
 use crate::parser::BinaryParser;
 
-pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
-    let has_checksum = PEHasCheckSumOption.check(parser)?;
-    let supports_data_execution_prevention = DataExecutionPreventionOption.check(parser)?;
-    let runs_only_in_app_container = PERunsOnlyInAppContainerOption.check(parser)?;
-    let enable_manifest_handling = PEEnableManifestHandlingOption.check(parser)?;
-    let requires_integrity_check = RequiresIntegrityCheckOption.check(parser)?;
-    let supports_control_flow_guard = PEControlFlowGuardOption.check(parser)?;
+pub(crate) fn analyze_binary(
+    parser: &BinaryParser,
+    options: &crate::cmdline::Options,
+) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
+    let has_checksum = PEHasCheckSumOption.check(parser, options)?;
+    let supports_data_execution_prevention =
+        DataExecutionPreventionOption.check(parser, options)?;
+    let runs_only_in_app_container = PERunsOnlyInAppContainerOption.check(parser, options)?;
+    let enable_manifest_handling = PEEnableManifestHandlingOption.check(parser, options)?;
+    let requires_integrity_check = RequiresIntegrityCheckOption.check(parser, options)?;
+    let supports_control_flow_guard = PEControlFlowGuardOption.check(parser, options)?;
     let handles_addresses_larger_than_2_gigabytes =
-        PEHandlesAddressesLargerThan2GBOption.check(parser)?;
+        PEHandlesAddressesLargerThan2GBOption.check(parser, options)?;
     let supports_address_space_layout_randomization =
-        AddressSpaceLayoutRandomizationOption.check(parser)?;
+        AddressSpaceLayoutRandomizationOption.check(parser, options)?;
     let supports_safe_structured_exception_handling =
-        PESafeStructuredExceptionHandlingOption.check(parser)?;
+        PESafeStructuredExceptionHandlingOption.check(parser, options)?;
 
     Ok(vec![
         has_checksum,

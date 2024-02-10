@@ -12,7 +12,7 @@ use log::{debug, log_enabled};
 use regex::{Regex, RegexBuilder};
 
 use super::checked_functions::{function_is_checked_version, CheckedFunction};
-use crate::cmdline::{LibCSpec, ARGS};
+use crate::cmdline::LibCSpec;
 use crate::errors::{Error, Result};
 use crate::parser::BinaryParser;
 
@@ -52,8 +52,11 @@ impl NeededLibC {
         }
     }
 
-    pub fn find_needed_by_executable(elf: &goblin::elf::Elf) -> Result<Self> {
-        if let Some(path) = ARGS.flag_libc.as_ref() {
+    pub(crate) fn find_needed_by_executable(
+        elf: &goblin::elf::Elf,
+        options: &crate::cmdline::Options,
+    ) -> Result<Self> {
+        if let Some(path) = &options.libc {
             Self::open_elf_for_architecture(path, elf)
         } else {
             elf.libraries
@@ -61,7 +64,7 @@ impl NeededLibC {
                 // Only consider libraries whose pattern is known.
                 .filter(|needed_lib| KNOWN_LIBC_PATTERN.is_match(needed_lib))
                 // Parse the library.
-                .map(|lib| Self::open_compatible_libc(lib, elf))
+                .map(|lib| Self::open_compatible_libc(lib, elf, options))
                 // Return the first that can be successfully parsed.
                 .find(Result::is_ok)
                 // Or return an error in case nothing is found or nothing can be parsed.
@@ -69,13 +72,17 @@ impl NeededLibC {
         }
     }
 
-    fn open_compatible_libc(file_name: impl AsRef<Path>, elf: &goblin::elf::Elf) -> Result<Self> {
+    fn open_compatible_libc(
+        file_name: impl AsRef<Path>,
+        elf: &goblin::elf::Elf,
+        options: &crate::cmdline::Options,
+    ) -> Result<Self> {
         KNOWN_LIBC_FILE_LOCATIONS
             .iter()
             // For each known libc file location, parse the libc file.
             .map(|known_location| {
                 Self::open_elf_for_architecture(
-                    Self::get_libc_path(known_location, &file_name),
+                    Self::get_libc_path(known_location, &file_name, options),
                     elf,
                 )
             })
@@ -85,8 +92,12 @@ impl NeededLibC {
             .unwrap_or_else(|| Err(Error::NotFoundNeededLibC(file_name.as_ref().into())))
     }
 
-    fn get_libc_path(location: impl AsRef<OsStr>, file_name: impl AsRef<Path>) -> PathBuf {
-        let mut path = if let Some(sysroot) = ARGS.flag_sysroot.as_ref() {
+    fn get_libc_path(
+        location: impl AsRef<OsStr>,
+        file_name: impl AsRef<Path>,
+        options: &crate::cmdline::Options,
+    ) -> PathBuf {
+        let mut path = if let Some(sysroot) = options.sysroot.as_ref() {
             let mut p = PathBuf::from(sysroot).into_os_string();
             p.push(location.as_ref());
             PathBuf::from(p)
@@ -199,11 +210,7 @@ static KNOWN_LIBC_FILE_LOCATIONS: &[&str] = &[
     "/usr/lib32",
 ];
 
-lazy_static::lazy_static! {
-    static ref KNOWN_LIBC_PATTERN: Regex = init_known_libc_pattern();
-}
-
-fn init_known_libc_pattern() -> Regex {
+static KNOWN_LIBC_PATTERN: once_cell::sync::Lazy<Regex> = once_cell::sync::Lazy::new(|| {
     RegexBuilder::new(r"\blib(c|bionic)\b[^/]+$")
         .case_insensitive(true)
         .multi_line(false)
@@ -211,4 +218,4 @@ fn init_known_libc_pattern() -> Regex {
         .unicode(true)
         .build()
         .expect("Invalid static regular expression.")
-}
+});

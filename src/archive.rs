@@ -11,8 +11,11 @@ use crate::options::status::DisplayInColorTerm;
 use crate::options::{BinarySecurityOption, ELFStackProtectionOption};
 use crate::parser::BinaryParser;
 
-pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
-    let has_stack_protection = ELFStackProtectionOption.check(parser)?;
+pub(crate) fn analyze_binary(
+    parser: &BinaryParser,
+    options: &crate::cmdline::Options,
+) -> Result<Vec<Box<dyn DisplayInColorTerm>>> {
+    let has_stack_protection = ELFStackProtectionOption.check(parser, options)?;
     Ok(vec![has_stack_protection])
 }
 
@@ -22,13 +25,13 @@ pub(crate) fn has_stack_protection(
 ) -> Result<bool> {
     let bytes = parser.bytes();
     for member_name in archive.members() {
-        let buffer = archive
-            .extract(member_name, bytes)
-            .map_err(|source| Error::Goblin1 {
-                operation: "goblin::archive::Archive",
-                param1: member_name.into(),
-                source,
-            })?;
+        let buffer =
+            archive
+                .extract(member_name, bytes)
+                .map_err(|source| Error::ExtractArchiveMember {
+                    member: member_name.into(),
+                    source,
+                })?;
 
         let r = member_has_stack_protection(member_name, buffer)?;
         if r {
@@ -43,10 +46,7 @@ pub(crate) fn has_stack_protection(
 fn member_has_stack_protection(member_name: &str, bytes: &[u8]) -> Result<bool> {
     use goblin::Object;
 
-    let obj = Object::parse(bytes).map_err(|source| Error::Goblin {
-        operation: "goblin::Object::parse",
-        source,
-    })?;
+    let obj = Object::parse(bytes).map_err(|source| Error::ParseFile { source })?;
 
     if let Object::Elf(elf) = obj {
         // elf.is_object_file()
