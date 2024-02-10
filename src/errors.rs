@@ -57,7 +57,7 @@ pub enum Error {
     #[error("binary format '{format}' of file '{path}' is recognized but unsupported")]
     UnsupportedBinaryFormat { format: String, path: PathBuf },
 
-    #[error("dependent C runtime library is not recognized")]
+    #[error("dependent C runtime library is not recognized. Consider specifying --sysroot, --libc or --libc-spec")]
     UnrecognizedNeededLibC,
 
     #[error("dependent C runtime library '{0}' was not found")]
