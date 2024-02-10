@@ -29,15 +29,20 @@ pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColo
     let has_stack_protection = ELFStackProtectionOption.check(parser)?;
     let read_only_after_reloc = ELFReadOnlyAfterRelocationsOption.check(parser)?;
     let immediate_bind = ELFImmediateBindingOption.check(parser)?;
-    let fortify_source = ELFFortifySourceOption::new(ARGS.flag_libc_spec).check(parser)?;
 
-    Ok(vec![
+    let mut result = vec![
         supports_address_space_layout_randomization,
         has_stack_protection,
         read_only_after_reloc,
         immediate_bind,
-        fortify_source,
-    ])
+    ];
+
+    if !ARGS.flag_no_libc {
+        let fortify_source = ELFFortifySourceOption::new(ARGS.flag_libc_spec).check(parser)?;
+        result.push(fortify_source);
+    }
+
+    Ok(result)
 }
 
 pub fn get_libc_functions_by_protection<'t>(

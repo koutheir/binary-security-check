@@ -18,6 +18,7 @@ pub struct Args {
     pub flag_sysroot: Option<PathBuf>,
     pub flag_libc: Option<PathBuf>,
     pub flag_libc_spec: Option<LibCSpec>,
+    pub flag_no_libc: bool,
     pub flag_color: UseColor,
     pub arg_file: Vec<PathBuf>,
 }

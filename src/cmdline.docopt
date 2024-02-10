@@ -2,7 +2,7 @@
 {1}, by {3}.
 
 Usage:
-  {0} [-v] [-c COLOR] [(-s DIR | -l FILE | -i SPEC)] <file>...
+  {0} [-v] [-c COLOR] [(-s DIR | -l FILE | -i SPEC | -n)] <file>...
   {0} (-h | --help)
   {0} --version
 
@@ -14,6 +14,7 @@ Options:
   -l FILE, --libc=FILE  Set the path of the C runtime library.
   -i SPEC, --libc-spec=SPEC  Use an internal list of checked functions as
                  specified by a specification.
+  -n, --no-libc  Assume that input files do not use any C runtime libraries.
   -v, --verbose  Verbose logging.
   -h, --help     Show this screen.
   --version      Show version.

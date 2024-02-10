@@ -3,7 +3,7 @@
 
 # Analyzer of security features in executable binaries
 
-`binary-security-check` is a command line utility that analyses executable
+`binary-security-check` is a command line utility that analyzes executable
 binaries looking for features that make the executable more secure,
 or less prone to some vulnerabilities.
 
@@ -13,7 +13,7 @@ In order to use this tool on your computer, you need to build it from sources:
 
 1. If you don't have a [Rust](https://www.rust-lang.org/) toolchain installed,
    then [install one](https://www.rust-lang.org/tools/install).
-   I recommend to install the latest stable toolchain for your computer.
+   I recommend installing the latest stable toolchain for your computer.
 
 2. Install a C toolchain for your computer. For example on Debian Linux:
    ```
@@ -91,7 +91,7 @@ For example, `!ASLR` means the binary does not support Address Space Layout Rand
 
 ```
 Usage:
-  binary-security-check [-v] [-c COLOR] [(-s DIR | -l FILE | -i SPEC)] <file>...
+  binary-security-check [-v] [-c COLOR] [(-s DIR | -l FILE | -i SPEC | -n)] <file>...
   binary-security-check (-h | --help)
   binary-security-check --version
 
@@ -103,6 +103,7 @@ Options:
   -l FILE, --libc=FILE  Set the path of the C runtime library.
   -i SPEC, --libc-spec=SPEC  Use an internal list of checked functions as
                  specified by a specification.
+  -n, --no-libc  Assume that input files do not use any C runtime libraries.
   -v, --verbose  Verbose logging.
   -h, --help     Show this screen.
   --version      Show version.
@@ -137,11 +138,12 @@ needed by the analyzed files, which is given by the --libc parameter.
 
 ## Miscellaneous features
 
-- Runs on multiple platforms, including Linux and Windows.
-- Supports all binary executable formats independently on which platform is used to run the tool.
+- Runs on multiple platforms, including Linux, FreeBSD and Windows.
+- Supports all binary executable formats independently of which platform is used to run the tool.
 - Operates in parallel when sensible.
 - Output colored text.
-- Support multiple ways to identify binary's dependent C library, including Linux Standard Base (LSB) specifications.
+- Support multiple ways to identify binary's dependent C library (if there is one),
+  including Linux Standard Base (LSB) specifications.
 - Designed to be easily extensible.
 
 # License
