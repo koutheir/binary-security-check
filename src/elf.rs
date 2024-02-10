@@ -4,8 +4,8 @@
 // Licensed under the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-pub mod checked_functions;
-pub mod needed_libc;
+pub(crate) mod checked_functions;
+pub(crate) mod needed_libc;
 
 use std::collections::HashSet;
 
@@ -45,7 +45,7 @@ pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColo
     Ok(result)
 }
 
-pub fn get_libc_functions_by_protection<'t>(
+pub(crate) fn get_libc_functions_by_protection<'t>(
     elf: &goblin::elf::Elf,
     libc_ref: &'t NeededLibC,
 ) -> (HashSet<&'t str>, HashSet<&'t str>) {
@@ -77,7 +77,7 @@ pub fn get_libc_functions_by_protection<'t>(
 }
 
 /// [`ET_EXEC`, `ET_DYN`, `PT_PHDR`](http://refspecs.linux-foundation.org/elf/TIS1.1.pdf).
-pub fn supports_aslr(elf: &goblin::elf::Elf) -> ASLRCompatibilityLevel {
+pub(crate) fn supports_aslr(elf: &goblin::elf::Elf) -> ASLRCompatibilityLevel {
     debug!(
         "Header type is 'ET_{}'.",
         goblin::elf::header::et_to_str(elf.header.e_type)
@@ -127,7 +127,7 @@ pub fn supports_aslr(elf: &goblin::elf::Elf) -> ASLRCompatibilityLevel {
 }
 
 /// [PT_GNU_RELRO](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/progheader.html).
-pub fn becomes_read_only_after_relocations(elf: &goblin::elf::Elf) -> bool {
+pub(crate) fn becomes_read_only_after_relocations(elf: &goblin::elf::Elf) -> bool {
     let r = elf
         .program_headers
         .iter()
@@ -140,7 +140,7 @@ pub fn becomes_read_only_after_relocations(elf: &goblin::elf::Elf) -> bool {
 }
 
 /// [`__stack_chk_fail`](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/baselib---stack-chk-fail-1.html).
-pub fn has_stack_protection(elf: &goblin::elf::Elf) -> bool {
+pub(crate) fn has_stack_protection(elf: &goblin::elf::Elf) -> bool {
     let r = elf
         .dynsyms
         .iter()
@@ -164,7 +164,7 @@ const STV_DEFAULT: u8 = 0;
 /// Visible in other components but not preemptable.
 //const STV_PROTECTED: u8 = 3;
 
-pub fn dynamic_symbol_is_named_exported_function<'elf>(
+pub(crate) fn dynamic_symbol_is_named_exported_function<'elf>(
     elf: &'elf goblin::elf::Elf,
     symbol: &goblin::elf::sym::Sym,
 ) -> Option<&'elf str> {
@@ -192,9 +192,9 @@ pub fn dynamic_symbol_is_named_exported_function<'elf>(
 }
 
 /// Position Independent Executable.
-pub const DF_1_PIE: u64 = 0x08_00_00_00;
+pub(crate) const DF_1_PIE: u64 = 0x08_00_00_00;
 
-pub fn symbol_is_named_function_or_unspecified<'elf>(
+pub(crate) fn symbol_is_named_function_or_unspecified<'elf>(
     elf: &'elf goblin::elf::Elf,
     symbol: &goblin::elf::sym::Sym,
 ) -> Option<&'elf str> {
@@ -253,7 +253,7 @@ fn dynamic_symbol_is_named_imported_function<'elf>(
 
 /// - [`DT_BIND_NOW`](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/dynamicsection.html).
 /// - [`DF_BIND_NOW`, `DF_1_NOW`](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/libc-ddefs.html).
-pub fn requires_immediate_binding(elf: &goblin::elf::Elf) -> bool {
+pub(crate) fn requires_immediate_binding(elf: &goblin::elf::Elf) -> bool {
     elf.dynamic
         // We want to reference the data in `elf.dynamic`, not move it.
         .as_ref()

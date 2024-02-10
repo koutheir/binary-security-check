@@ -5,41 +5,41 @@
 // or distributed except according to those terms.
 
 #[derive(Debug, Eq, PartialEq, Hash)]
-pub struct CheckedFunction {
+pub(crate) struct CheckedFunction {
     checked_name: String,
 }
 
 impl CheckedFunction {
-    pub fn from_checked_name(checked_name: &str) -> Self {
+    pub(crate) fn from_checked_name(checked_name: &str) -> Self {
         Self {
             checked_name: String::from(checked_name),
         }
     }
 
-    pub fn from_unchecked_name(unchecked_name: &str) -> Self {
+    pub(crate) fn from_unchecked_name(unchecked_name: &str) -> Self {
         Self {
             checked_name: format!("__{unchecked_name}_chk"),
         }
     }
 
-    pub fn _get_checked_name(&self) -> &str {
+    pub(crate) fn _get_checked_name(&self) -> &str {
         &self.checked_name
     }
 
-    pub fn get_unchecked_name(&self) -> &str {
+    pub(crate) fn get_unchecked_name(&self) -> &str {
         &self.checked_name[2..self.checked_name.len() - 4]
     }
 }
 
 /// [Functions prefixed by `__` and suffixed by `_chk`](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/libc.html).
-pub fn function_is_checked_version(name: &str) -> bool {
+pub(crate) fn function_is_checked_version(name: &str) -> bool {
     name.starts_with("__") && name.ends_with("_chk")
 }
 
 /// - [LSB 4.0.0](http://refspecs.linux-foundation.org/LSB_4.0.0/LSB-Core-generic/LSB-Core-generic/libc.html).
 /// - [LSB 4.1.0](http://refspecs.linux-foundation.org/LSB_4.1.0/LSB-Core-generic/LSB-Core-generic/libc.html).
 /// - [LSB 5.0.0](http://refspecs.linux-foundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/libc.html).
-pub static LSB_4_0_0_FUNCTIONS_WITH_CHECKED_VERSIONS: &[&str] = &[
+pub(crate) static LSB_4_0_0_FUNCTIONS_WITH_CHECKED_VERSIONS: &[&str] = &[
     "confstr",
     "fgets",
     "fgets_unlocked",

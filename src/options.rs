@@ -4,7 +4,7 @@
 // Licensed under the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-pub mod status;
+pub(crate) mod status;
 
 use crate::elf::needed_libc::NeededLibC;
 use crate::errors::Result;
@@ -43,7 +43,7 @@ impl<'t> BinarySecurityOption<'t> for PEDllCharacteristicsBitOption {
 }
 
 #[derive(Default)]
-pub struct PEHasCheckSumOption;
+pub(crate) struct PEHasCheckSumOption;
 
 impl<'t> BinarySecurityOption<'t> for PEHasCheckSumOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
@@ -61,7 +61,7 @@ impl<'t> BinarySecurityOption<'t> for PEHasCheckSumOption {
 }
 
 #[derive(Default)]
-pub struct DataExecutionPreventionOption;
+pub(crate) struct DataExecutionPreventionOption;
 
 impl<'t> BinarySecurityOption<'t> for DataExecutionPreventionOption {
     /// Returns information about support of Data Execution Prevention (DEP) in the executable.
@@ -85,7 +85,7 @@ impl<'t> BinarySecurityOption<'t> for DataExecutionPreventionOption {
 }
 
 #[derive(Default)]
-pub struct PERunsOnlyInAppContainerOption;
+pub(crate) struct PERunsOnlyInAppContainerOption;
 
 impl<'t> BinarySecurityOption<'t> for PERunsOnlyInAppContainerOption {
     /// Returns information about the requirement to run this executable inside `AppContainer`.
@@ -105,7 +105,7 @@ impl<'t> BinarySecurityOption<'t> for PERunsOnlyInAppContainerOption {
 }
 
 #[derive(Default)]
-pub struct RequiresIntegrityCheckOption;
+pub(crate) struct RequiresIntegrityCheckOption;
 
 impl<'t> BinarySecurityOption<'t> for RequiresIntegrityCheckOption {
     /// Returns whether the operating system must to verify the digital signature of this executable
@@ -126,7 +126,7 @@ impl<'t> BinarySecurityOption<'t> for RequiresIntegrityCheckOption {
 }
 
 #[derive(Default)]
-pub struct PEEnableManifestHandlingOption;
+pub(crate) struct PEEnableManifestHandlingOption;
 
 impl<'t> BinarySecurityOption<'t> for PEEnableManifestHandlingOption {
     /// Returns whether the operating system is allowed to consider manifest files when loading
@@ -149,7 +149,7 @@ impl<'t> BinarySecurityOption<'t> for PEEnableManifestHandlingOption {
 }
 
 #[derive(Default)]
-pub struct PEControlFlowGuardOption;
+pub(crate) struct PEControlFlowGuardOption;
 
 impl<'t> BinarySecurityOption<'t> for PEControlFlowGuardOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
@@ -163,7 +163,7 @@ impl<'t> BinarySecurityOption<'t> for PEControlFlowGuardOption {
 }
 
 #[derive(Default)]
-pub struct PEHandlesAddressesLargerThan2GBOption;
+pub(crate) struct PEHandlesAddressesLargerThan2GBOption;
 
 impl<'t> BinarySecurityOption<'t> for PEHandlesAddressesLargerThan2GBOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
@@ -180,7 +180,7 @@ impl<'t> BinarySecurityOption<'t> for PEHandlesAddressesLargerThan2GBOption {
 }
 
 #[derive(Default)]
-pub struct AddressSpaceLayoutRandomizationOption;
+pub(crate) struct AddressSpaceLayoutRandomizationOption;
 
 impl<'t> BinarySecurityOption<'t> for AddressSpaceLayoutRandomizationOption {
     /// Returns the level of support of Address Space Layout Randomization (ASLR).
@@ -198,7 +198,7 @@ impl<'t> BinarySecurityOption<'t> for AddressSpaceLayoutRandomizationOption {
 }
 
 #[derive(Default)]
-pub struct PESafeStructuredExceptionHandlingOption;
+pub(crate) struct PESafeStructuredExceptionHandlingOption;
 
 impl<'t> BinarySecurityOption<'t> for PESafeStructuredExceptionHandlingOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
@@ -215,7 +215,7 @@ impl<'t> BinarySecurityOption<'t> for PESafeStructuredExceptionHandlingOption {
 }
 
 #[derive(Default)]
-pub struct ELFReadOnlyAfterRelocationsOption;
+pub(crate) struct ELFReadOnlyAfterRelocationsOption;
 
 impl<'t> BinarySecurityOption<'t> for ELFReadOnlyAfterRelocationsOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
@@ -232,7 +232,7 @@ impl<'t> BinarySecurityOption<'t> for ELFReadOnlyAfterRelocationsOption {
 }
 
 #[derive(Default)]
-pub struct ELFStackProtectionOption;
+pub(crate) struct ELFStackProtectionOption;
 
 impl<'t> BinarySecurityOption<'t> for ELFStackProtectionOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
@@ -253,7 +253,7 @@ impl<'t> BinarySecurityOption<'t> for ELFStackProtectionOption {
 }
 
 #[derive(Default)]
-pub struct ELFImmediateBindingOption;
+pub(crate) struct ELFImmediateBindingOption;
 
 impl<'t> BinarySecurityOption<'t> for ELFImmediateBindingOption {
     fn check(&self, parser: &BinaryParser) -> Result<Box<dyn DisplayInColorTerm>> {
@@ -266,12 +266,12 @@ impl<'t> BinarySecurityOption<'t> for ELFImmediateBindingOption {
     }
 }
 
-pub struct ELFFortifySourceOption {
+pub(crate) struct ELFFortifySourceOption {
     libc_spec: Option<cmdline::LibCSpec>,
 }
 
 impl ELFFortifySourceOption {
-    pub fn new(libc_spec: Option<cmdline::LibCSpec>) -> Self {
+    pub(crate) fn new(libc_spec: Option<cmdline::LibCSpec>) -> Self {
         Self { libc_spec }
     }
 }

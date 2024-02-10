@@ -13,7 +13,7 @@ use crate::errors::{Error, Result};
 /// If cloned and given to another thread, then both threads can write to their own color buffer
 /// without synchronizing, and later a joining thread can perform the synchronization and write
 /// all cloned color buffers.
-pub struct ColorBuffer {
+pub(crate) struct ColorBuffer {
     buffer_writer: Arc<termcolor::BufferWriter>,
     pub(crate) color_buffer: termcolor::Buffer,
 }

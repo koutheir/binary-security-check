@@ -48,22 +48,22 @@ pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColo
     ])
 }
 
-pub const IMAGE_DLLCHARACTERISTICS_NX_COMPAT: u16 = 0x0100;
-pub const IMAGE_DLLCHARACTERISTICS_APPCONTAINER: u16 = 0x1000;
-pub const IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY: u16 = 0x0080;
-pub const IMAGE_DLLCHARACTERISTICS_NO_ISOLATION: u16 = 0x0200;
-pub const IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE: u16 = 0x0040;
-pub const IMAGE_DLLCHARACTERISTICS_GUARD_CF: u16 = 0x4000;
-pub const IMAGE_FILE_LARGE_ADDRESS_AWARE: u16 = 0x0020;
-pub const IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA: u16 = 0x0020;
-pub const IMAGE_FILE_RELOCS_STRIPPED: u16 = 0x0001;
-pub const RDATA_CHARACTERISTICS: u32 = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
-pub const PDATA_CHARACTERISTICS: u32 = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
+pub(crate) const IMAGE_DLLCHARACTERISTICS_NX_COMPAT: u16 = 0x0100;
+pub(crate) const IMAGE_DLLCHARACTERISTICS_APPCONTAINER: u16 = 0x1000;
+pub(crate) const IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY: u16 = 0x0080;
+pub(crate) const IMAGE_DLLCHARACTERISTICS_NO_ISOLATION: u16 = 0x0200;
+pub(crate) const IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE: u16 = 0x0040;
+pub(crate) const IMAGE_DLLCHARACTERISTICS_GUARD_CF: u16 = 0x4000;
+pub(crate) const IMAGE_FILE_LARGE_ADDRESS_AWARE: u16 = 0x0020;
+pub(crate) const IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA: u16 = 0x0020;
+pub(crate) const IMAGE_FILE_RELOCS_STRIPPED: u16 = 0x0001;
+pub(crate) const RDATA_CHARACTERISTICS: u32 = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
+pub(crate) const PDATA_CHARACTERISTICS: u32 = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
 #[allow(non_snake_case)]
-pub struct ImageLoadConfigCodeIntegrity {
+pub(crate) struct ImageLoadConfigCodeIntegrity {
     Flags: u16,
     Catalog: u16,
     CatalogOffset: u32,
@@ -73,7 +73,7 @@ pub struct ImageLoadConfigCodeIntegrity {
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
 #[allow(non_snake_case)]
-pub struct ImageLoadConfigDirectory32 {
+pub(crate) struct ImageLoadConfigDirectory32 {
     Size: u32,
     TimeDateStamp: u32,
     MajorVersion: u16,
@@ -120,7 +120,7 @@ pub struct ImageLoadConfigDirectory32 {
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
 #[allow(non_snake_case)]
-pub struct ImageLoadConfigDirectory64 {
+pub(crate) struct ImageLoadConfigDirectory64 {
     Size: u32,
     TimeDateStamp: u32,
     MajorVersion: u16,
@@ -165,13 +165,13 @@ pub struct ImageLoadConfigDirectory64 {
 }
 
 #[allow(non_camel_case_types)]
-pub type ImageLoadConfigDirectory_Size_Type = u32;
+pub(crate) type ImageLoadConfigDirectory_Size_Type = u32;
 #[allow(non_camel_case_types)]
-pub type ImageLoadConfigDirectory32_SEHandlerCount_Type = u32;
+pub(crate) type ImageLoadConfigDirectory32_SEHandlerCount_Type = u32;
 #[allow(non_camel_case_types)]
-pub type ImageLoadConfigDirectory64_SEHandlerCount_Type = u64;
+pub(crate) type ImageLoadConfigDirectory64_SEHandlerCount_Type = u64;
 
-pub fn dll_characteristics_bit_is_set(
+pub(crate) fn dll_characteristics_bit_is_set(
     pe: &goblin::pe::PE,
     mask_name: &'static str,
     mask: u16,
@@ -195,7 +195,7 @@ pub fn dll_characteristics_bit_is_set(
 /// Operating systems that support CFG stop a program that fails a CFG runtime check. This makes
 /// it more difficult for an attacker to execute malicious code by using data corruption to
 /// change a call target.
-pub fn supports_control_flow_guard(pe: &goblin::pe::PE) -> PEControlFlowGuardLevel {
+pub(crate) fn supports_control_flow_guard(pe: &goblin::pe::PE) -> PEControlFlowGuardLevel {
     if let Some(optional_header) = pe.header.optional_header {
         if (optional_header.windows_fields.dll_characteristics & IMAGE_DLLCHARACTERISTICS_GUARD_CF)
             == 0
@@ -219,14 +219,14 @@ pub fn supports_control_flow_guard(pe: &goblin::pe::PE) -> PEControlFlowGuardLev
     }
 }
 
-pub fn has_check_sum(pe: &goblin::pe::PE) -> Option<bool> {
+pub(crate) fn has_check_sum(pe: &goblin::pe::PE) -> Option<bool> {
     pe.header
         .optional_header
         .map(|header| header.windows_fields.check_sum != 0)
 }
 
 /// Returns whether the executable can handle addresses larger than 2 Gigabytes.
-pub fn handles_addresses_larger_than_2_gigabytes(pe: &goblin::pe::PE) -> bool {
+pub(crate) fn handles_addresses_larger_than_2_gigabytes(pe: &goblin::pe::PE) -> bool {
     let r = (pe.header.coff_header.characteristics & IMAGE_FILE_LARGE_ADDRESS_AWARE) != 0;
     if r {
         debug!(
@@ -236,7 +236,7 @@ pub fn handles_addresses_larger_than_2_gigabytes(pe: &goblin::pe::PE) -> bool {
     r
 }
 
-pub fn supports_aslr(pe: &goblin::pe::PE) -> ASLRCompatibilityLevel {
+pub(crate) fn supports_aslr(pe: &goblin::pe::PE) -> ASLRCompatibilityLevel {
     if (pe.header.coff_header.characteristics & IMAGE_FILE_RELOCS_STRIPPED) != 0 {
         // Base relocation information are absent. The loader cannot relocate the image.
         debug!("Bit 'IMAGE_FILE_RELOCS_STRIPPED' is set in 'Characteristics' inside COFF header.");
@@ -294,7 +294,10 @@ pub fn supports_aslr(pe: &goblin::pe::PE) -> ASLRCompatibilityLevel {
 ///
 /// `SafeSEH` is optional only on x86 targets. Other architectures, such as x64 and ARM, always
 /// store all exception handlers in the PDATA section.
-pub fn has_safe_structured_exception_handlers(parser: &BinaryParser, pe: &goblin::pe::PE) -> bool {
+pub(crate) fn has_safe_structured_exception_handlers(
+    parser: &BinaryParser,
+    pe: &goblin::pe::PE,
+) -> bool {
     match has_safe_seh_handlers(parser, pe) {
         Some(true) => true,
         Some(false) | None => has_pdata_section(pe),

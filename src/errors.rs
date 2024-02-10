@@ -6,10 +6,10 @@
 
 use std::path::PathBuf;
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub(crate) type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
-pub enum Error {
+pub(crate) enum Error {
     #[error("{operation}({path}) failed")]
     IO1 {
         operation: &'static str,
@@ -65,7 +65,7 @@ pub enum Error {
 }
 
 impl Error {
-    pub fn from_io1(
+    pub(crate) fn from_io1(
         source: std::io::Error,
         operation: &'static str,
         path: impl Into<PathBuf>,

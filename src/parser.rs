@@ -15,7 +15,7 @@ use memmap::{Mmap, MmapOptions};
 
 use crate::errors::{Error, Result};
 
-pub struct BinaryParser {
+pub(crate) struct BinaryParser {
     bytes: Mmap,
     object: Option<goblin::Object<'static>>,
     _pin: PhantomPinned,
@@ -61,13 +61,13 @@ impl BinaryParser {
         Ok(result)
     }
 
-    pub fn object(&self) -> &goblin::Object {
+    pub(crate) fn object(&self) -> &goblin::Object {
         // SAFETY: All instances of `Self` that are created and still in scope
         // must have `Some(_)` in the `object` field.
         self.object.as_ref().unwrap()
     }
 
-    pub fn bytes(&self) -> &[u8] {
+    pub(crate) fn bytes(&self) -> &[u8] {
         &self.bytes
     }
 

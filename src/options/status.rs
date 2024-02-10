@@ -13,33 +13,33 @@ use crate::elf;
 use crate::elf::needed_libc::NeededLibC;
 use crate::errors::{Error, Result};
 
-pub const MARKER_GOOD: char = '+';
-pub const MARKER_BAD: char = '!';
-pub const MARKER_MAYBE: char = '~';
-pub const MARKER_UNKNOWN: char = '?';
+pub(crate) const MARKER_GOOD: char = '+';
+pub(crate) const MARKER_BAD: char = '!';
+pub(crate) const MARKER_MAYBE: char = '~';
+pub(crate) const MARKER_UNKNOWN: char = '?';
 
-pub const COLOR_GOOD: termcolor::Color = termcolor::Color::Green;
-pub const COLOR_BAD: termcolor::Color = termcolor::Color::Red;
-pub const COLOR_UNKNOWN: termcolor::Color = termcolor::Color::Yellow;
+pub(crate) const COLOR_GOOD: termcolor::Color = termcolor::Color::Green;
+pub(crate) const COLOR_BAD: termcolor::Color = termcolor::Color::Red;
+pub(crate) const COLOR_UNKNOWN: termcolor::Color = termcolor::Color::Yellow;
 
-pub trait DisplayInColorTerm {
+pub(crate) trait DisplayInColorTerm {
     fn display_in_color_term(&self, wc: &mut dyn termcolor::WriteColor) -> Result<()>;
 }
 
-pub struct YesNoUnknownStatus {
+pub(crate) struct YesNoUnknownStatus {
     name: &'static str,
     status: Option<bool>,
 }
 
 impl YesNoUnknownStatus {
-    pub fn new(name: &'static str, yes_or_no: bool) -> Self {
+    pub(crate) fn new(name: &'static str, yes_or_no: bool) -> Self {
         Self {
             name,
             status: Some(yes_or_no),
         }
     }
 
-    pub fn unknown(name: &'static str) -> Self {
+    pub(crate) fn unknown(name: &'static str) -> Self {
         Self { name, status: None }
     }
 }
@@ -70,7 +70,7 @@ impl DisplayInColorTerm for YesNoUnknownStatus {
 }
 
 /// [Control Flow Guard](https://docs.microsoft.com/en-us/cpp/build/reference/guard-enable-guard-checks).
-pub enum PEControlFlowGuardLevel {
+pub(crate) enum PEControlFlowGuardLevel {
     /// Control Flow Guard support is unknown.
     Unknown,
     /// Control Flow Guard is unsupported.
@@ -108,7 +108,7 @@ impl DisplayInColorTerm for PEControlFlowGuardLevel {
     }
 }
 
-pub enum ASLRCompatibilityLevel {
+pub(crate) enum ASLRCompatibilityLevel {
     /// Address Space Layout Randomization support is unknown.
     Unknown,
     /// Address Space Layout Randomization is unsupported.
@@ -163,7 +163,7 @@ impl DisplayInColorTerm for ASLRCompatibilityLevel {
     }
 }
 
-pub struct ELFFortifySourceStatus {
+pub(crate) struct ELFFortifySourceStatus {
     libc: NeededLibC,
     protected_functions: HashSet<&'static str>,
     unprotected_functions: HashSet<&'static str>,
@@ -171,7 +171,7 @@ pub struct ELFFortifySourceStatus {
 }
 
 impl ELFFortifySourceStatus {
-    pub fn new(libc: NeededLibC, elf_object: &goblin::elf::Elf) -> Result<Pin<Box<Self>>> {
+    pub(crate) fn new(libc: NeededLibC, elf_object: &goblin::elf::Elf) -> Result<Pin<Box<Self>>> {
         let mut result = Box::pin(Self {
             libc,
             protected_functions: HashSet::default(),

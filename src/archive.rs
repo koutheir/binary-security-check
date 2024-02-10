@@ -16,7 +16,7 @@ pub fn analyze_binary(parser: &BinaryParser) -> Result<Vec<Box<dyn DisplayInColo
     Ok(vec![has_stack_protection])
 }
 
-pub fn has_stack_protection(
+pub(crate) fn has_stack_protection(
     parser: &BinaryParser,
     archive: &goblin::archive::Archive,
 ) -> Result<bool> {

@@ -16,12 +16,12 @@ use crate::cmdline::{LibCSpec, ARGS};
 use crate::errors::{Error, Result};
 use crate::parser::BinaryParser;
 
-pub struct NeededLibC {
+pub(crate) struct NeededLibC {
     checked_functions: HashSet<CheckedFunction>,
 }
 
 impl NeededLibC {
-    pub fn from_spec(spec: LibCSpec) -> Self {
+    pub(crate) fn from_spec(spec: LibCSpec) -> Self {
         let functions_with_checked_versions = spec.get_functions_with_checked_versions();
 
         if log_enabled!(log::Level::Debug) {
@@ -173,13 +173,13 @@ impl NeededLibC {
         checked_functions
     }
 
-    pub fn exports_function<'this>(&'this self, checked_name: &str) -> Option<&'this str> {
+    pub(crate) fn exports_function<'this>(&'this self, checked_name: &str) -> Option<&'this str> {
         self.checked_functions
             .get(&CheckedFunction::from_checked_name(checked_name))
             .map(CheckedFunction::get_unchecked_name)
     }
 
-    pub fn exports_checked_version_of_function<'this>(
+    pub(crate) fn exports_checked_version_of_function<'this>(
         &'this self,
         unchecked_name: &str,
     ) -> Option<&'this str> {
