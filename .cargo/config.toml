@@ -14,3 +14,9 @@ linker = "ld.lld"
 [target.x86_64-pc-windows-gnu]
 linker = "x86_64-w64-mingw32-gcc"
 runner = "wine-stable"
+
+# rustup target add x86_64-unknown-freebsd
+# cargo build --release --target=x86_64-unknown-freebsd
+[target.x86_64-unknown-freebsd]
+linker    = "tools/x86_64-unknown-freebsd-clang.sh"
+rustflags = ["-Clink-arg=--target=x86_64-unknown-freebsd"]

@@ -6,7 +6,7 @@
 
 pub(crate) mod status;
 
-use crate::elf::needed_libc::NeededLibC;
+use crate::elf::needed_libc::{LibCResolver, NeededLibC};
 use crate::errors::Result;
 use crate::parser::BinaryParser;
 use crate::{archive, cmdline, elf, pe};
@@ -341,8 +341,10 @@ impl<'t> BinarySecurityOption<'t> for ELFFortifySourceOption {
         if let goblin::Object::Elf(elf) = parser.object() {
             let libc = if let Some(spec) = self.libc_spec {
                 NeededLibC::from_spec(spec)
+            } else if let Some(path) = &options.libc {
+                NeededLibC::open_elf_for_architecture(path, elf)?
             } else {
-                NeededLibC::find_needed_by_executable(elf, options)?
+                LibCResolver::get(options)?.find_needed_by_executable(elf)?
             };
 
             let result = ELFFortifySourceStatus::new(libc, elf)?;

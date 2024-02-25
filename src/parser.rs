@@ -27,7 +27,6 @@ impl BinaryParser {
         let file =
             fs::File::open(&path).map_err(|r| Error::from_io1(r, "open file", path.as_ref()))?;
 
-        debug!("Mapping binary file '{}'.", path.as_ref().display());
         let bytes = unsafe { MmapOptions::new().map(&file) }
             .map_err(|r| Error::from_io1(r, "map file", path.as_ref()))?;
 

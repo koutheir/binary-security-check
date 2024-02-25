@@ -24,7 +24,8 @@
     clippy::min_ident_chars,
     clippy::single_char_lifetime_names,
     clippy::single_call_fn,
-    clippy::absolute_paths
+    clippy::absolute_paths,
+    clippy::similar_names
 )]
 
 mod archive;

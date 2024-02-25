@@ -60,6 +60,18 @@ pub(crate) enum Error {
 
     #[error("dependent C runtime library '{0}' was not found")]
     NotFoundNeededLibC(PathBuf),
+
+    #[error(transparent)]
+    FromBytesWithNul(#[from] core::ffi::FromBytesWithNulError),
+
+    #[error(transparent)]
+    FromBytesUntilNul(#[from] core::ffi::FromBytesUntilNulError),
+
+    #[error(transparent)]
+    Scroll(#[from] scroll::Error),
+
+    #[error(transparent)]
+    DynamicLoaderCache(#[from] dynamic_loader_cache::Error),
 }
 
 impl Error {

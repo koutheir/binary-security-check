@@ -6,7 +6,7 @@
 
 [package]
 name = "binary-security-check"
-version = "1.2.15"
+version = "1.3.0"
 authors = ["Koutheir Attouchi <koutheir@gmail.com>"]
 license = "MIT"
 description = "Analyzer of security features in executable binaries"
@@ -37,17 +37,18 @@ incremental      = false
 overflow-checks  = true
 
 [dependencies]
-thiserror    = { version = "1.0" }
-goblin       = { version = "0.8" }
-once_cell    = { version = "1.19" }
-log          = { version = "0.4" }
-memmap2      = { version = "0.9" }
-rayon        = { version = "1.8" }
-regex        = { version = "1.10" }
-scroll       = { version = "0.12" }
-flexi_logger = { version = "0.27" }
-termcolor    = { version = "1.4" }
-memoffset    = { version = "0.9" }
+thiserror            = { version = "1.0" }
+goblin               = { version = "0.8" }
+once_cell            = { version = "1.19" }
+log                  = { version = "0.4" }
+memmap2              = { version = "0.9" }
+rayon                = { version = "1.8" }
+regex                = { version = "1.10" }
+scroll               = { version = "0.12" }
+flexi_logger         = { version = "0.27" }
+termcolor            = { version = "1.4" }
+memoffset            = { version = "0.9" }
+dynamic-loader-cache = { version = "0.1" }
 
 clap = { version = "4.5", features = [
   "color",

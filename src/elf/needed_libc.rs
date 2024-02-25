@@ -5,8 +5,8 @@
 // or distributed except according to those terms.
 
 use std::collections::HashSet;
-use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 use log::{debug, log_enabled};
 use regex::{Regex, RegexBuilder};
@@ -15,6 +15,99 @@ use super::checked_functions::{function_is_checked_version, CheckedFunction};
 use crate::cmdline::LibCSpec;
 use crate::errors::{Error, Result};
 use crate::parser::BinaryParser;
+
+#[derive(Debug)]
+pub(crate) struct LibCResolver {
+    sys_root: PathBuf,
+    ld_so_cache: Option<dynamic_loader_cache::Cache>,
+}
+
+static LIBC_RESOLVER: OnceLock<Option<LibCResolver>> = OnceLock::new();
+
+impl LibCResolver {
+    pub(crate) fn get(options: &crate::cmdline::Options) -> Result<&'static Self> {
+        let mut first_err = None;
+
+        let r = LIBC_RESOLVER.get_or_init(|| match Self::new(options) {
+            Ok(r) => Some(r),
+
+            Err(err) => {
+                first_err = Some(err);
+                None
+            }
+        });
+
+        if let Some(err) = first_err {
+            Err(err)
+        } else {
+            r.as_ref().ok_or_else(|| {
+                let err = std::io::ErrorKind::InvalidData.into();
+                Error::from_io1(err, "load linker cache", "")
+            })
+        }
+    }
+
+    fn new(options: &crate::cmdline::Options) -> Result<Self> {
+        let ld_so_cache = if options.sysroot.is_none() {
+            Some(dynamic_loader_cache::Cache::load()?)
+        } else {
+            None
+        };
+
+        let sys_root = options.sysroot.as_deref().unwrap_or_else(|| Path::new("/"));
+
+        Ok(Self {
+            sys_root: sys_root.into(),
+            ld_so_cache,
+        })
+    }
+
+    pub(crate) fn find_needed_by_executable(&self, elf: &goblin::elf::Elf) -> Result<NeededLibC> {
+        elf.libraries
+            .iter()
+            // Only consider libraries whose pattern is known.
+            .filter(|needed_lib| KNOWN_LIBC_PATTERN.is_match(needed_lib))
+            // Parse the library.
+            .map(|&lib| self.open_compatible_libc(elf, Path::new(lib)))
+            // Return the first that can be successfully parsed.
+            .find(Result::is_ok)
+            // Or return an error in case nothing is found or nothing can be parsed.
+            .unwrap_or(Err(Error::UnrecognizedNeededLibC))
+    }
+
+    fn open_compatible_libc(&self, elf: &goblin::elf::Elf, file_name: &Path) -> Result<NeededLibC> {
+        debug!("Looking for libc '{}'.", file_name.display());
+
+        if let Some(ld_so_cache) = self.ld_so_cache.as_ref() {
+            let found_in_ld_so_cache = ld_so_cache
+                .iter()?
+                .filter_map(dynamic_loader_cache::Result::ok)
+                .filter_map(|e| (e.file_name == file_name).then_some(e.full_path))
+                // For each known libc file location, parse the libc file.
+                .map(|path| NeededLibC::open_elf_for_architecture(path, elf))
+                // Return the first that can be successfully parsed.
+                .find(Result::is_ok);
+
+            if let Some(libc) = found_in_ld_so_cache {
+                return libc;
+            }
+        }
+
+        KNOWN_LIB_DIRS
+            .iter()
+            .flat_map(|&lib| {
+                KNOWN_PREFIXES
+                    .iter()
+                    .map(move |&prefix| self.sys_root.join(prefix).join(lib).join(file_name))
+            })
+            // For each known libc file location, parse the libc file.
+            .map(|path| NeededLibC::open_elf_for_architecture(path, elf))
+            // Return the first that can be successfully parsed.
+            .find(Result::is_ok)
+            // Or return an error in case nothing is found or nothing can be parsed.
+            .unwrap_or_else(|| Err(Error::NotFoundNeededLibC(file_name.into())))
+    }
+}
 
 pub(crate) struct NeededLibC {
     checked_functions: HashSet<CheckedFunction>,
@@ -52,64 +145,7 @@ impl NeededLibC {
         }
     }
 
-    pub(crate) fn find_needed_by_executable(
-        elf: &goblin::elf::Elf,
-        options: &crate::cmdline::Options,
-    ) -> Result<Self> {
-        if let Some(path) = &options.libc {
-            Self::open_elf_for_architecture(path, elf)
-        } else {
-            elf.libraries
-                .iter()
-                // Only consider libraries whose pattern is known.
-                .filter(|needed_lib| KNOWN_LIBC_PATTERN.is_match(needed_lib))
-                // Parse the library.
-                .map(|lib| Self::open_compatible_libc(lib, elf, options))
-                // Return the first that can be successfully parsed.
-                .find(Result::is_ok)
-                // Or return an error in case nothing is found or nothing can be parsed.
-                .unwrap_or(Err(Error::UnrecognizedNeededLibC))
-        }
-    }
-
-    fn open_compatible_libc(
-        file_name: impl AsRef<Path>,
-        elf: &goblin::elf::Elf,
-        options: &crate::cmdline::Options,
-    ) -> Result<Self> {
-        KNOWN_LIBC_FILE_LOCATIONS
-            .iter()
-            // For each known libc file location, parse the libc file.
-            .map(|known_location| {
-                Self::open_elf_for_architecture(
-                    Self::get_libc_path(known_location, &file_name, options),
-                    elf,
-                )
-            })
-            // Return the first that can be successfully parsed.
-            .find(Result::is_ok)
-            // Or return an error in case nothing is found or nothing can be parsed.
-            .unwrap_or_else(|| Err(Error::NotFoundNeededLibC(file_name.as_ref().into())))
-    }
-
-    fn get_libc_path(
-        location: impl AsRef<OsStr>,
-        file_name: impl AsRef<Path>,
-        options: &crate::cmdline::Options,
-    ) -> PathBuf {
-        let mut path = if let Some(sysroot) = options.sysroot.as_ref() {
-            let mut p = PathBuf::from(sysroot).into_os_string();
-            p.push(location.as_ref());
-            PathBuf::from(p)
-        } else {
-            PathBuf::from(location.as_ref())
-        };
-
-        path.push(&file_name);
-        path
-    }
-
-    fn open_elf_for_architecture(
+    pub(crate) fn open_elf_for_architecture(
         path: impl AsRef<Path>,
         other_elf: &goblin::elf::Elf,
     ) -> Result<Self> {
@@ -201,14 +237,8 @@ impl NeededLibC {
 }
 
 // If this changes, then update the command line reference.
-static KNOWN_LIBC_FILE_LOCATIONS: &[&str] = &[
-    "/lib",
-    "/usr/lib",
-    "/lib64",
-    "/usr/lib64",
-    "/lib32",
-    "/usr/lib32",
-];
+static KNOWN_PREFIXES: &[&str] = &["", "usr"];
+static KNOWN_LIB_DIRS: &[&str] = &["lib", "lib64", "lib32"];
 
 static KNOWN_LIBC_PATTERN: once_cell::sync::Lazy<Regex> = once_cell::sync::Lazy::new(|| {
     RegexBuilder::new(r"\blib(c|bionic)\b[^/]+$")
