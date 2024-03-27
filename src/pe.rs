@@ -4,11 +4,10 @@
 // Licensed under the MIT license. This file may not be copied, modified,
 // or distributed except according to those terms.
 
-use core::mem;
+use core::mem::{offset_of, size_of};
 
 use goblin::pe::section_table::{IMAGE_SCN_CNT_INITIALIZED_DATA, IMAGE_SCN_MEM_READ};
 use log::debug;
-use memoffset::offset_of;
 use scroll::Pread;
 
 use crate::errors::Result;
@@ -387,12 +386,12 @@ fn image_load_configuration_directory_has_safe_seh_handlers(
     let (offset_of_se_handler_count, size_of_se_handler_count) = if pe.is_64 {
         (
             offset_of!(ImageLoadConfigDirectory64, SEHandlerCount),
-            mem::size_of::<ImageLoadConfigDirectory64_SEHandlerCount_Type>(),
+            size_of::<ImageLoadConfigDirectory64_SEHandlerCount_Type>(),
         )
     } else {
         (
             offset_of!(ImageLoadConfigDirectory32, SEHandlerCount),
-            mem::size_of::<ImageLoadConfigDirectory32_SEHandlerCount_Type>(),
+            size_of::<ImageLoadConfigDirectory32_SEHandlerCount_Type>(),
         )
     };
 
