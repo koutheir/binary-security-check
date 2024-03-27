@@ -5,17 +5,18 @@
 # or distributed except according to those terms.
 
 [package]
-name = "binary-security-check"
-version = "1.3.0"
-authors = ["Koutheir Attouchi <koutheir@gmail.com>"]
-license = "MIT"
-description = "Analyzer of security features in executable binaries"
-edition = "2021"
+name          = "binary-security-check"
+version       = "1.3.1"
+authors       = ["Koutheir Attouchi <koutheir@gmail.com>"]
+license       = "MIT"
+description   = "Analyzer of security features in executable binaries"
+edition       = "2021"
+readme        = "README.md"
 documentation = "https://docs.rs/binary-security-check"
-readme = "README.md"
-homepage = "https://github.com/koutheir/binary-security-check"
-repository = "https://github.com/koutheir/binary-security-check"
-categories = ["command-line-utilities", "development-tools", "visualization"]
+homepage      = "https://codeberg.org/koutheir/binary-security-check.git"
+repository    = "https://codeberg.org/koutheir/binary-security-check.git"
+categories    = ["command-line-utilities", "development-tools", "visualization"]
+
 keywords = [
   "security",
   "aslr",
@@ -42,10 +43,10 @@ goblin               = { version = "0.8" }
 once_cell            = { version = "1.19" }
 log                  = { version = "0.4" }
 memmap2              = { version = "0.9" }
-rayon                = { version = "1.8" }
+rayon                = { version = "1.10" }
 regex                = { version = "1.10" }
 scroll               = { version = "0.12" }
-flexi_logger         = { version = "0.27" }
+flexi_logger         = { version = "0.28" }
 termcolor            = { version = "1.4" }
 dynamic-loader-cache = { version = "0.1" }
 
